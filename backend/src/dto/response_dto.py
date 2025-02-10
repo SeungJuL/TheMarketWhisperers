@@ -4,6 +4,13 @@ class ResponseDto:
         self.message = message
         self.data = data
 
+    def to_dict(self):
+        return {
+            "success": self.success,
+            "message": self.message,
+            "data": self.data
+        }
+
 class ResponseUtil:
     @staticmethod
     def success(message, data):

@@ -1,0 +1,7 @@
+Flask
+Flask-CORS
+Flask-Login
+Werkzeug
+psycopg2
+requests
+python-dotenv
