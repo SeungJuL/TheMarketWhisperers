@@ -60,6 +60,7 @@ SESSION_SECRET_KEY='see_discord'
 Ensure PostgreSQL is running:
 ```sh
 brew services start postgresql  # macOS (Homebrew)
+sudo systemctl stop postgresql //to stop (Mac)
 sudo systemctl start postgresql  # Linux
 net start postgresql  # Windows
 ```
