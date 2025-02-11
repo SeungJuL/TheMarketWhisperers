@@ -19,7 +19,7 @@ def fetch_stock_data(func, symbol=None, keywords=None, interval=None):
         if interval:
             params["interval"] = interval
 
-        response = requests.get('base_url', params=params)
+        response = requests.get(base_url, params=params)
         response.raise_for_status()
         return response.json()
     

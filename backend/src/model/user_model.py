@@ -1,5 +1,4 @@
 from db.psql import conn_psql
-from datetime import datetime
 
 class User_Model:
     @staticmethod
@@ -15,7 +14,7 @@ class User_Model:
     def find_by_email(user_email):
         psql_db = conn_psql()
         db_cursor = psql_db.cursor()
-        sql = "SELECT * FROM users WHERE user_email = %s"
+        sql = "SELECT * FROM users WHERE email = %s"
         db_cursor.execute(sql, (user_email,))
         user = db_cursor.fetchone()
         return user

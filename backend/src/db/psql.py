@@ -1,5 +1,7 @@
 import psycopg2
 import os
+from dotenv import load_dotenv
+load_dotenv()
 
 PSQL_CONN = psycopg2.connect(
     database=os.getenv('PSQL_DB_NAME'), 
