@@ -1,5 +1,4 @@
 from db.psql import conn_psql
-from datetime import datetime
 
 class User_Model:
     @staticmethod
