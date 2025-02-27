@@ -1,29 +1,28 @@
-from flask import jsonify
 from dto.response_dto import ResponseUtil
 import requests
 import os
+from dotenv import load_dotenv
+import yfinance as yf
+load_dotenv()
 
-def fetch_stock_data(func, symbol=None, keywords=None, interval=None):
+def fetch_stock_name(keywords):
     try:
         api_key = os.getenv('STOCK_API_KEY')
         base_url = "https://www.alphavantage.co/query"
-        
         params = {
-            "function": func,
+            "function": "SYMBOL_SEARCH",
             "apikey": api_key,
+            "keywords": keywords
         }
-        if symbol:
-            params["symbol"] = symbol
-        if keywords:
-            params["keywords"] = keywords
-        if interval:
-            params["interval"] = interval
-
+        
         response = requests.get(base_url, params=params)
         response.raise_for_status()
-        return response.json()
+        data = response.json()
+        return data
     
-    except Exception as e:
-            return ResponseUtil.error('An error occurred during login', str(e)), 500
-
-        
+    except requests.exceptions.RequestException as e:
+        return ResponseUtil.error("Failed to fetch stock ticker", str(e)), 500
+    
+def fetch_stock_data(symbol):
+    stock = yf.Ticker(symbol)
+    return stock

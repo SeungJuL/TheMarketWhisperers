@@ -8,6 +8,8 @@ class User_Model:
         sql = "SELECT * FROM users WHERE user_id = %d"
         db_cursor.execute(sql, (user_id,))
         user = db_cursor.fetchone()
+        if not user:
+            return None
         return user
     
     @staticmethod
@@ -17,6 +19,8 @@ class User_Model:
         sql = "SELECT * FROM users WHERE email = %s"
         db_cursor.execute(sql, (user_email,))
         user = db_cursor.fetchone()
+        if not user:
+            return None
         return user
     
     @staticmethod

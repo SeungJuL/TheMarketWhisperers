@@ -1,4 +1,4 @@
-from flask import request, jsonify
+from flask import jsonify
 from flask_login import UserMixin, login_user, logout_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from model.user_model import User_Model
@@ -14,18 +14,23 @@ class User(UserMixin):
         return str(self.id)
 
     @staticmethod
-    def register():
+    def register(data):
         try:
-            data = request.get_json()
             email = data.get('email')
             password = data.get('password')
             username = data.get('username')
 
+            # Check Duplicate email
+            duplicate_user = User_Model.find_by_email(email)
+            if duplicate_user:
+                return ResponseUtil.failure("Duplicate email address", None), 400
+            
             # Password hashing
             password_hash = generate_password_hash(password)
 
             # Save user in database
             user = User_Model.save(email, password_hash, username)
+            print(user)
             if user is None:
                 return ResponseUtil.error('Register Failed', None), 500
             else:
@@ -33,19 +38,9 @@ class User(UserMixin):
         except Exception as e:
             return ResponseUtil.error('An error occurred during registration', str(e)), 500
 
-
     @staticmethod
-    def find_by_id(user_id):
-        user = User_Model.find_by_id(user_id)
-        if user:
-            return User(user[0], user[1], user[2])  # Convert tuple to UserMixin instance
-        return None
-
-
-    @staticmethod
-    def login():
+    def login(data):
         try:
-            data = request.get_json()
             email = data.get('email')
             password = data.get('password')
 
@@ -67,3 +62,16 @@ class User(UserMixin):
 
         except Exception as e:
             return ResponseUtil.error('An error occurred during login', str(e)), 500
+        
+    @staticmethod
+    def profile(email):
+        try:
+            user_info = User_Model.find_by_email(email)
+            user_profile = {
+                "email": user_info[1],
+                "username": user_info[3]
+            }
+            return ResponseUtil.success('Sucess getting user profile', user_profile), 201
+        except Exception as e:
+                return ResponseUtil.error('An error occurred during login', str(e)), 500
+        

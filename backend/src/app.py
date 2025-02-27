@@ -4,6 +4,7 @@ from flask_cors import CORS
 from dotenv import load_dotenv
 from controller.user_controller import User
 from blueprint.user import user_blueprint
+from blueprint.stock import stock_blueprint
 import os
 
 app = Flask(__name__)
@@ -26,6 +27,7 @@ def unauthorized():
 
 # blue print
 app.register_blueprint(user_blueprint, url_prefix='/user')
+app.register_blueprint(stock_blueprint, url_prefix='/stock')
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port='8080', debug=True)

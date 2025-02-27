@@ -13,3 +13,4 @@ CREATE TABLE watchlists (
     asset_symbol VARCHAR(20) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
