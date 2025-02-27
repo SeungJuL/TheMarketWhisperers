@@ -4,9 +4,33 @@ import { useState } from "react";
 const TestPage = ({ setUser }) => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [confirmPassword, setConfirmedPassword] = useState("");
     const [username, setUsername] = useState("");
+    const [error, setError] = useState("");
+
+    const validatePassword = () => {
+      const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
+
+      if (!regex.test(password)) {
+        setError("Password must be at least 8 characters and include an uppercase letter, lowercase letter, number, and special character.");
+        return false;
+      }
+
+      if (password != confirmPassword) {
+        setError("Passwords do not match.");
+        return false;
+      }
+
+      setError(""); // Clear error if valid
+      return true;
+    }
   
-    const handleSignup = async () => {
+    // Line 28
+    const handleSignup = async (e) => {
+      e.preventDefault();
+
+      if (!validatePassword()) return;
+
       const response = await fetch("http://127.0.0.1:8080/user/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -22,6 +46,9 @@ const TestPage = ({ setUser }) => {
       }
     };
   
+
+
+
     return (
       /*<div className="container">
         <h1>📝 Signup</h1>
@@ -76,8 +103,9 @@ const TestPage = ({ setUser }) => {
                     </div>
                     <div class="mb-4">
                       <label class="block text-sm mb-1">Confirm Password</label>
-                      <input type="password" placeholder="Confirm Password" required class="w-full p-2 text-black bg-white-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-400" />
+                      <input type="password" placeholder="Confirm Password" required onChange={(e) => setConfirmedPassword(e.target.value)} class="w-full p-2 text-black bg-white-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-400" />
                     </div>
+                    {error && <p class="text-red-500 text-sm mb-4">{error}</p>}
                     <button onClick={handleSignup} class="w-full p-2 bg-slate-900 hover:bg-blue-800 rounded text-white font-semibold">Sign Up</button>
                 </form>
 
