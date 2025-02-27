@@ -1,10 +1,9 @@
 import { useState } from "react";
 
-
 const TestPage = ({ setUser }) => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [confirmPassword, setConfirmedPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
     const [username, setUsername] = useState("");
     const [error, setError] = useState("");
 
@@ -25,7 +24,6 @@ const TestPage = ({ setUser }) => {
       return true;
     }
   
-    // Line 28
     const handleSignup = async (e) => {
       e.preventDefault();
 
@@ -46,22 +44,13 @@ const TestPage = ({ setUser }) => {
       }
     };
   
-
-
-
     return (
-      /*<div className="container">
-        <h1>📝 Signup</h1>
-        <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
-        <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} />
-        <input type="text" placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} />
-        <button onClick={handleSignup}>Sign Up</button>
-      </div>*/
 
       <div class="flex h-screen bg-slate-800 text-white justify-center items-center ">
         
         {/* Container to keep both sections the same size. */}
         <div class="flex w-full max-w-4xl gap-2">
+          
             {/* Left Section */}
             <div class="w-1/2 flex flex-col justify-between items-center bg-slate-700 rounded-lg border border-slate-500 p-8 ml-2 min-h-[400px]">
                 <h2 class="text-3xl font-bold mt-2">Why Join?</h2>
@@ -103,7 +92,7 @@ const TestPage = ({ setUser }) => {
                     </div>
                     <div class="mb-4">
                       <label class="block text-sm mb-1">Confirm Password</label>
-                      <input type="password" placeholder="Confirm Password" required onChange={(e) => setConfirmedPassword(e.target.value)} class="w-full p-2 text-black bg-white-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-400" />
+                      <input type="password" placeholder="Confirm Password" required onChange={(e) => setConfirmPassword(e.target.value)} class="w-full p-2 text-black bg-white-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-400" />
                     </div>
                     {error && <p class="text-red-500 text-sm mb-4">{error}</p>}
                     <button onClick={handleSignup} class="w-full p-2 bg-slate-900 hover:bg-blue-800 rounded text-white font-semibold">Sign Up</button>
