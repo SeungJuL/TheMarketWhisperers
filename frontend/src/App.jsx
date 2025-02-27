@@ -4,8 +4,6 @@ import HomePage from "./pages/HomePage";
 import ProfilePage from "./pages/ProfilePage";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
-import TestPage from "./pages/TestPage";
-import StockPage from "./pages/StockPage";
 import Navbar from "./components/Navbar";
 
 function App() {
@@ -30,8 +28,6 @@ function App() {
         <Route path="/profile" element={user ? <ProfilePage user={user} /> : <Navigate to="/login" />} />
         <Route path="/login" element={<LoginPage setUser={setUser} />} />
         <Route path="/signup" element={<SignupPage setUser={setUser} />} />
-        <Route path="/test" element={<TestPage setUser={setUser}/>} />
-        <Route path="/stock" element={<StockPage setUser={setUser}/>} />
       </Routes>
     </Router>
   );
