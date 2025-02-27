@@ -30,6 +30,7 @@ class User(UserMixin):
 
             # Save user in database
             user = User_Model.save(email, password_hash, username)
+            print(user)
             if user is None:
                 return ResponseUtil.error('Register Failed', None), 500
             else:
@@ -63,9 +64,14 @@ class User(UserMixin):
             return ResponseUtil.error('An error occurred during login', str(e)), 500
         
     @staticmethod
-    def profile():
+    def profile(email):
         try:
-            return None
+            user_info = User_Model.find_by_email(email)
+            user_profile = {
+                "email": user_info[1],
+                "username": user_info[3]
+            }
+            return ResponseUtil.success('Sucess getting user profile', user_profile), 201
         except Exception as e:
                 return ResponseUtil.error('An error occurred during login', str(e)), 500
         

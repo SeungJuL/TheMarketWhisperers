@@ -15,4 +15,4 @@ def login():
 @user_blueprint.route('/profile', methods=['GET'])
 @login_required
 def profile():
-    return User.profile()
+    return User.profile(request.args.get('email'))
