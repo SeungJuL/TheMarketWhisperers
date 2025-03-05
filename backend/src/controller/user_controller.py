@@ -5,13 +5,21 @@ from model.user_model import User_Model
 from dto.response_dto import ResponseUtil
 
 class User(UserMixin):
-    def __init__(self, user_id, user_email, user_password):
+    def __init__(self, user_id, user_email, user_password, username):
         self.id = user_id
         self.user_email = user_email
         self.user_password = user_password
+        self.username = username
 
     def get_id(self):
         return str(self.id)
+    
+    @staticmethod
+    def get(user_id):
+        user = User_Model.find_by_id(user_id)
+        if user:
+            return User(user[0], user[1], user[2], user[3])
+        return None
 
     @staticmethod
     def register(data):
