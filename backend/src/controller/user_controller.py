@@ -5,11 +5,10 @@ from model.user_model import User_Model
 from dto.response_dto import ResponseUtil
 
 class User(UserMixin):
-    def __init__(self, user_id, user_email, user_password, username):
+    def __init__(self, user_id, user_email, user_password):
         self.id = user_id
         self.user_email = user_email
         self.user_password = user_password
-        self.username = username
 
     def get_id(self):
         return str(self.id)
@@ -18,7 +17,7 @@ class User(UserMixin):
     def get(user_id):
         user = User_Model.find_by_id(user_id)
         if user:
-            return User(user[0], user[1], user[2], user[3])
+            return User(user[0], user[1], user[2])
         return None
 
     @staticmethod
@@ -66,7 +65,7 @@ class User(UserMixin):
 
             # Log in user
             login_user(user_instance)
-            return ResponseUtil.success('Login success', {"email": user[1], "username": user[3]}), 201
+            return ResponseUtil.success('Login success', {"email": user[1]}), 201
 
         except Exception as e:
             return ResponseUtil.error('An error occurred during login', str(e)), 500
@@ -82,4 +81,3 @@ class User(UserMixin):
             return ResponseUtil.success('Sucess getting user profile', user_profile), 201
         except Exception as e:
                 return ResponseUtil.error('An error occurred during login', str(e)), 500
-        
