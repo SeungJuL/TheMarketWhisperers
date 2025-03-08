@@ -3,7 +3,7 @@ from dto.response_dto import ResponseUtil
 
 class Stock:
     @staticmethod
-    def stock_search(stock_name):
+    def symbol_search(stock_name):
         try:
             stock_datas = fetch_stock_name(stock_name)
             matched_stocks = stock_datas['bestMatches']
@@ -12,7 +12,7 @@ class Stock:
             return ResponseUtil.error('An error occurred during searching stocks', str(e)), 500
         
     @staticmethod
-    def stock_price(symbol):
+    def current_price(symbol):
         try:
             stock = fetch_stock_data(symbol)
             price = stock.history(period="1d")["Close"].iloc[-1]
@@ -32,18 +32,26 @@ class Stock:
             return ResponseUtil.error('An error occurred during getting historical stock datas', str(e)), 500
         
     @staticmethod
-    def stock_info(symbol):
+    def company_info(symbol):
         try:
             stock = fetch_stock_data(symbol)
             info = stock.info
-            return ResponseUtil.success("Success getting stock informations", 
-                {
+            fast_info = stock.fast_info
+            data = {
                 "symbol": symbol,
-                "PER": info.get("trailingPE"),
-                "EPS": info.get("trailingEps"),
+                "52_week_high": fast_info.get("yearHigh"),
+                "52_week_low": fast_info.get("yearLow"),
+                "market_cap": info.get("marketCap"),
+                "beta": info.get("beta"), 
+                "eps": info.get("trailingEps"), 
+                "volume": fast_info.get("lastVolume"),  
+                "average_volume": info.get("averageVolume"),
+                "debt_to_equity": info.get("debtToEquity"),
+                "revenue_growth": info.get("revenueGrowth"),
                 "dividend_yield": info.get("dividendYield"),
-                "dividend_date": info.get("exDividendDate")
-                }), 201
+                "pe_ratio": info.get("trailingPE")
+            }           
+            return ResponseUtil.success("Success getting stock informations", data), 201
         
         except Exception as e:
             return ResponseUtil.error('An error occurred during getting stock informations', str(e)), 500
