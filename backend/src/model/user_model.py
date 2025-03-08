@@ -5,7 +5,7 @@ class User_Model:
     def find_by_id(user_id):
         psql_db = conn_psql()
         db_cursor = psql_db.cursor()
-        sql = "SELECT * FROM users WHERE user_id = %d"
+        sql = "SELECT * FROM users WHERE user_id = %s"
         db_cursor.execute(sql, (user_id,))
         user = db_cursor.fetchone()
         if not user:

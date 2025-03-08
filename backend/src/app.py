@@ -5,7 +5,9 @@ from dotenv import load_dotenv
 from controller.user_controller import User
 from blueprint.user import user_blueprint
 from blueprint.stock import stock_blueprint
+from blueprint.watchlist import watchlist_blueprint
 import os
+
 
 app = Flask(__name__)
 CORS(app)
@@ -28,6 +30,7 @@ def unauthorized():
 # blue print
 app.register_blueprint(user_blueprint, url_prefix='/user')
 app.register_blueprint(stock_blueprint, url_prefix='/stock')
+app.register_blueprint(watchlist_blueprint, url_prefix='/watchlist')
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port='8080', debug=True)
