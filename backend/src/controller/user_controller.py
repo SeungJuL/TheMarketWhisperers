@@ -2,6 +2,7 @@ from flask import jsonify
 from flask_login import UserMixin, login_user, logout_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from model.user_model import User_Model
+from model.watchlist_model import Watchlist_Model
 from dto.response_dto import ResponseUtil
 
 class User(UserMixin):
@@ -37,10 +38,10 @@ class User(UserMixin):
 
             # Save user in database
             user = User_Model.save(email, password_hash, username)
-            print(user)
             if user is None:
                 return ResponseUtil.error('Register Failed', None), 500
             else:
+                Watchlist_Model.create_watchlist(user[0])
                 return ResponseUtil.success('Register Success', {"email": user[1], "username": user[3]}), 201
         except Exception as e:
             return ResponseUtil.error('An error occurred during registration', str(e)), 500
