@@ -47,8 +47,7 @@ const DashboardPage = () => {
 
   return (
     <PageWrapper>
-      <Navbar />
-      <div className="flex flex-col items-center justify-center flex-grow px-4 md:px-8 mt-16">
+      <div className="flex flex-col items-center justify-center flex-grow px-4 md:px-8 mt-20 mb-20">
         {/* Top Navigation */}
         <div className="bg-transparent p-4 flex items-center justify-center z-40">
           <div className="relative">

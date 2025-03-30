@@ -7,7 +7,6 @@ import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 import Navbar from "./components/Navbar";
 import AboutUsPage from "./pages/AboutUsPage";
-import TestPage from "./pages/TestPage";
 
 function App() {
   // Create a mock user for testing the profile page without backend
@@ -56,13 +55,12 @@ function App() {
     <Router>
       <Navbar user={user} setUser={setUser} />
       <Routes>
-        <Route path="/" element={<HomePage />} />
+        <Route path="/" element={<HomePage user={user} />} />
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/profile" element={<ProfilePage user={user} />} />
         <Route path="/login" element={<LoginPage setUser={setUser} />} />
         <Route path="/signup" element={<SignupPage setUser={setUser} />} />
         <Route path="/about" element={<AboutUsPage />} />
-        <Route path="/test" element={<TestPage /> } />
       </Routes>
     </Router>
   );
