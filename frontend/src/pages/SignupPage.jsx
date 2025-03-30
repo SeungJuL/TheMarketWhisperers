@@ -16,7 +16,7 @@ const SignupPage = ({ setUser }) => {
       return false;
     }
 
-    if (password != confirmPassword) {
+    if (password !== confirmPassword) {
       setError("Passwords do not match.");
       return false;
     }
@@ -96,9 +96,9 @@ const SignupPage = ({ setUser }) => {
               <button onClick={handleSignup} className="w-full p-2 bg-slate-900 hover:bg-blue-800 rounded text-white font-semibold">Sign Up</button>
             </form>
 
-            <h3 className="text-lg mb-4">Already signed up? 
-              <a href="#" className="text-blue-400"> Login</a>
-            </h3>
+              <h3 class="text-lg mb-4">Already signed up? 
+                  <a href="/login" class="text-blue-400"> Login</a>
+              </h3>
           </div>
         </div>
       </div>
