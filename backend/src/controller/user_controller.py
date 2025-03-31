@@ -1,5 +1,5 @@
 from flask import jsonify
-from flask_login import UserMixin, login_user, logout_user
+from flask_login import UserMixin, login_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from model.user_model import User_Model
 from model.watchlist_model import Watchlist_Model
@@ -72,9 +72,9 @@ class User(UserMixin):
             return ResponseUtil.error('An error occurred during login', str(e)), 500
         
     @staticmethod
-    def profile(email):
+    def profile():
         try:
-            user_info = User_Model.find_by_email(email)
+            user_info = User_Model.find_by_id(current_user.id)
             user_profile = {
                 "email": user_info[1],
                 "username": user_info[3]
