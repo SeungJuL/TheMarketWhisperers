@@ -9,7 +9,8 @@ const LoginPage = () => {
   const [error, setError] = useState(""); // ✅ Error message state
   const navigate = useNavigate();
 
-  const handleLogin = async () => {
+  const handleLogin = async (e) => {
+    e.preventDefault();
     setMessage("");  // Clear messages before a new attempt
     setError("");
 
@@ -26,7 +27,7 @@ const LoginPage = () => {
       if (data.success) {
         localStorage.setItem("token", data.token);
         setMessage("Login Successful! Redirecting...");  // ✅ Show success message
-        setTimeout(() => navigate("/profile"), 2000);  // Redirect after 2 seconds
+        setTimeout(() => navigate("/"), 2000);  // Redirect after 2 seconds
       } else {
         setError(`Login failed! ${data.message}`);  // ✅ Show error message
       }
