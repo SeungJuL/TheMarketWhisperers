@@ -13,14 +13,19 @@ class User(UserMixin):
     def get_id(self):
         return str(self.id)
     
-    @staticmethod
-    def get(user_id):
-        user = User_Model.find_by_id(user_id)
+    @classmethod
+    def get(cls, user_id):
+        user_model = User_Model();
+        user = user_model.find_by_id(user_id)
         if user:
-            return User(user[0], user[1], user[2])
+            return cls(user[0], user[1], user[2])
         return None
 
 class UserController:
+    def __init__(self):
+        self.user_model = User_Model()
+        self.watchlist_model = Watchlist_Model()
+
     def register(self, data):
         try:
             email = data.get('email')
@@ -28,7 +33,7 @@ class UserController:
             username = data.get('username')
 
             # Check Duplicate email
-            duplicate_user = User_Model.find_by_email(email)
+            duplicate_user = self.user_model.find_by_email(email)
             if duplicate_user:
                 return ResponseUtil.failure("Duplicate email address", None), 400
             
@@ -36,11 +41,11 @@ class UserController:
             password_hash = generate_password_hash(password)
 
             # Save user in database
-            user = User_Model.save(email, password_hash, username)
+            user = self.user_model.save(email, password_hash, username)
             if user is None:
                 return ResponseUtil.error('Register Failed', None), 500
             else:
-                Watchlist_Model.create_watchlist(user[0])
+                self.watchlist_model.create_watchlist(user[0])
                 return ResponseUtil.success('Register Success', {"email": user[1], "username": user[3]}), 201
         except Exception as e:
             return ResponseUtil.error('An error occurred during registration', str(e)), 500
@@ -51,7 +56,7 @@ class UserController:
             password = data.get('password')
 
             # Check user in database
-            user = User_Model.find_by_email(email)
+            user = self.user_model.find_by_email(email)
             if user is None:
                 return ResponseUtil.failure('No matching email in db', None), 400
 
@@ -71,7 +76,7 @@ class UserController:
         
     def profile(self):
         try:
-            user_info = User_Model.find_by_id(current_user.id)
+            user_info = self.user_model.find_by_id(current_user.id)
             user_profile = {
                 "email": user_info[1],
                 "username": user_info[3]

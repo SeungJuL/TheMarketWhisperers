@@ -1,8 +1,7 @@
 from db.psql import conn_psql
 
 class User_Model:
-    @staticmethod
-    def find_by_id(user_id):
+    def find_by_id(self, user_id):
         psql_db = conn_psql()
         db_cursor = psql_db.cursor()
         sql = "SELECT * FROM users WHERE user_id = %s"
@@ -12,8 +11,7 @@ class User_Model:
             return None
         return user
     
-    @staticmethod
-    def find_by_email(user_email):
+    def find_by_email(self, user_email):
         psql_db = conn_psql()
         db_cursor = psql_db.cursor()
         sql = "SELECT * FROM users WHERE email = %s"
@@ -23,13 +21,12 @@ class User_Model:
             return None
         return user
     
-    @staticmethod
-    def save(email, password_hash, username):
+    def save(self, email, password_hash, username):
         psql_db = conn_psql()
         db_cursor = psql_db.cursor()
         sql = "INSERT INTO users(email, password_hash, username) VALUES(%s, %s, %s)"
         db_cursor.execute(sql, (email, password_hash, username))
         psql_db.commit()
-        return User_Model.find_by_email(email)
+        return self.find_by_email(email)
     
     

@@ -3,11 +3,14 @@ from models.watchlist_model import Watchlist_Model
 from dtos.response_dto import ResponseUtil
 
 class Watchlist_Controller:
+    def __init__(self):
+        self.watchlist_model = Watchlist_Model()
+
     def get_watchlists(self):
         try:
             user_id = current_user.id
-            watchlist_id = Watchlist_Model.get_watchlist_id(user_id)
-            items = Watchlist_Model.get_items(watchlist_id)
+            watchlist_id = self.watchlist_model.get_watchlist_id(user_id)
+            items = self.watchlist_model.get_items(watchlist_id)
             return ResponseUtil.success('Watchlists retrieved successfully', [{"name": item[1], "asset_symbol": item[0]} for item in items]), 200
         except Exception as e:
             return ResponseUtil.error('An error occurred while retrieving watchlists', str(e)), 500
@@ -21,8 +24,8 @@ class Watchlist_Controller:
             if not name or not asset_symbol:
                 return ResponseUtil.failure('Name and asset symbol are required', None), 400
             
-            watchlist_id = Watchlist_Model.get_watchlist_id(user_id)
-            Watchlist_Model.add_to_watchlist(watchlist_id, asset_symbol, name)
+            watchlist_id = self.watchlist_model.get_watchlist_id(user_id)
+            self.watchlist_model.add_to_watchlist(watchlist_id, asset_symbol, name)
 
             return ResponseUtil.success('Asset added to watchlist', asset_symbol), 201
         except Exception as e:
@@ -36,8 +39,8 @@ class Watchlist_Controller:
             if not asset_symbol:
                 return ResponseUtil.failure('Asset symbol are required', None), 400
 
-            watchlist_id = Watchlist_Model.get_watchlist_id(user_id)
-            Watchlist_Model.remove_from_watchlist(watchlist_id, asset_symbol)
+            watchlist_id = self.watchlist_model.get_watchlist_id(user_id)
+            self.watchlist_model.remove_from_watchlist(watchlist_id, asset_symbol)
             return ResponseUtil.success('Asset removed from watchlist', asset_symbol), 200
         except Exception as e:
             return ResponseUtil.error('An error occurred while removing from watchlist', str(e)), 500

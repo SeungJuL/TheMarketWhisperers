@@ -1,17 +1,14 @@
 from db.psql import conn_psql
 
 class Watchlist_Model:
-
-    @staticmethod
-    def create_watchlist(user_id):
+    def create_watchlist(self, user_id):
         psql_db = conn_psql()
         db_cursor = psql_db.cursor()
         sql = "INSERT INTO watchlists(user_id) VALUES(%s)"
         db_cursor.execute(sql, (user_id,))
         psql_db.commit()
 
-    @staticmethod
-    def get_watchlist_id(user_id):
+    def get_watchlist_id(self, user_id):
         # get watchlist id
         psql_db = conn_psql()
         db_cursor = psql_db.cursor()
@@ -21,7 +18,7 @@ class Watchlist_Model:
         watchlist_id = watchlist[0]
         return watchlist_id
 
-    def get_items(watchlist_id):
+    def get_items(self, watchlist_id):
         # get watchlist items
         psql_db = conn_psql()
         db_cursor = psql_db.cursor()
@@ -30,16 +27,14 @@ class Watchlist_Model:
         items = db_cursor.fetchall()
         return items
 
-    @staticmethod
-    def add_to_watchlist(watchlist_id, name, asset_symbol):
+    def add_to_watchlist(self, watchlist_id, name, asset_symbol):
         psql_db = conn_psql()
         db_cursor = psql_db.cursor()
         sql = "INSERT INTO watchlist_items(watchlist_id, name, asset_symbol) VALUES(%s, %s, %s)"
         db_cursor.execute(sql, (watchlist_id, name, asset_symbol))
         psql_db.commit()
     
-    @staticmethod
-    def remove_from_watchlist(watchlist_id, asset_symbol):
+    def remove_from_watchlist(self, watchlist_id, asset_symbol):
         psql_db = conn_psql()
         db_cursor = psql_db.cursor()
         sql = "DELETE FROM watchlist_items WHERE watchlist_id = %s AND asset_symbol = %s"
