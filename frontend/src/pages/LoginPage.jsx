@@ -1,17 +1,17 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import PageWrapper from '../components/PageWrapper';
+import PageWrapper from "../components/PageWrapper";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [message, setMessage] = useState(""); // ✅ Success message state
-  const [error, setError] = useState(""); // ✅ Error message state
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    setMessage("");  // Clear messages before a new attempt
+    setMessage("");
     setError("");
 
     try {
@@ -20,120 +20,247 @@ const LoginPage = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-
       const data = await response.json();
-      console.log("API Response:", data); // Debugging
+      console.log("API Response:", data);
 
       if (data.success) {
         localStorage.setItem("token", data.token);
-        setMessage("Login Successful! Redirecting...");  // ✅ Show success message
-        setTimeout(() => navigate("/"), 2000);  // Redirect after 2 seconds
+        setMessage("Login Successful! Redirecting...");
+        setTimeout(() => navigate("/"), 2000);
       } else {
-        setError(`Login failed! ${data.message}`);  // ✅ Show error message
+        setError(`Login failed! ${data.message}`);
       }
-    } catch (error) {
-      console.error("Login Error:", error);
+    } catch (err) {
+      console.error("Login Error:", err);
       setError("Failed to connect to the server.");
     }
   };
 
   return (
+    <PageWrapper>
+      {/* Outer container with background image */}
+      <div className="relative min-h-screen w-full flex flex-col">
+        {/* Background Image */}
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{
+            backgroundImage: 'url("/backgroundhome.png")',
+            filter: "brightness(0.5)", // Dims the background
+          }}
+        />
+        {/* Content container */}
+        <div className="relative z-10 flex flex-col items-center justify-center min-h-screen px-4">
+          {/* Login Card */}
+          <div className="max-w-md w-full bg-opacity-0 backdrop-blur-lg rounded-2xl shadow-md p-8 border border-white/20 text-white">
+            <h2 className="text-3xl font-bold text-center mb-6">Login</h2>
 
-    <div class="min-h-screen bg-slate-800 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+            {/* Success / Error Messages */}
+            {message && (
+              <p className="text-green-500 mb-4 text-center">{message}</p>
+            )}
+            {error && <p className="text-red-500 mb-4 text-center">{error}</p>}
 
-      <div class="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 class="mt-6 text-center text-3xl font-extrabold text-white">
-          Login
-        </h2>
-
-        <p class="mt-2 text-center text-sm text-white max-w">
-          Or
-          <a href="/signup" class="font-medium text-blue-600 hover:text-blue-500"> create an account</a>
-        </p>
-      </div>
-
-      <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-
-        {message && <p className="success-message text-green-500 mb-4">{message}</p>}  {/* ✅ Success message */}
-        {error && <p className="error-message text-red-500 mb-4">{error}</p>}  {/* ✅ Error message */}
-
-        <div class="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-
-          <form class="space-y-6" acion="#" method="POST">
-            
-            <div>
-              <label for="email" class="block text-sm font-medium text-gray-700">Email Address</label>
-              <div class="mt-1">
-                <input id="email" name="email" type="email" autocomplete="email" required placeholder="Enter your email address" value={email} onChange={(e) => setEmail(e.target.value)}
-                class="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"></input>
+            <form onSubmit={handleLogin} className="space-y-5">
+              {/* Email Field + Icon */}
+              <div className="relative">
+                <input
+                  type="email"
+                  required
+                  placeholder="Email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="
+                    w-full p-4 pr-10
+                    bg-transparent
+                    border border-white/20
+                    text-white
+                    placeholder-slate-300
+                    rounded-lg
+                    focus:outline-none
+                    focus:ring-1 focus:ring-white
+                  "
+                />
+                {/* Envelope SVG Icon */}
+                <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.5}
+                    stroke="currentColor"
+                    className="w-5 h-5 text-slate-300"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 
+                        2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 
+                        19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 
+                        2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 
+                        8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"
+                    />
+                  </svg>
+                </div>
               </div>
-            </div>
 
-              <div>
-                <label for="password" class="block text-sm font-medium text-gray-700">
-                  Password
+              {/* Password Field + Icon */}
+              <div className="relative">
+                <input
+                  type="password"
+                  required
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="
+                    w-full p-4 pr-10
+                    bg-transparent
+                    border border-white/20
+                    text-white
+                    placeholder-slate-300
+                    rounded-lg
+                    focus:outline-none
+                    focus:ring-1 focus:ring-white
+                  "
+                />
+                {/* Lock SVG Icon */}
+                <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.5}
+                    stroke="currentColor"
+                    className="w-5 h-5 text-slate-300"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 
+                        11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 
+                        2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 
+                        2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"
+                    />
+                  </svg>
+                </div>
+              </div>
+
+              {/* Remember Me / Forgot Password */}
+              <div className="flex items-center justify-between mt-5">
+                <label className="flex items-center text-sm text-slate-200">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mr-2"
+                  />
+                  Remember Me
                 </label>
-                <div class="mt-1">
-                  <input id="password" name="password" type="password" autocomplete="current-password" required placeholder="Enter your password" value={password} onChange={(e) => setPassword(e.target.value)}
-                  class="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"></input>
-                </div>
+                <a href="#" className="text-sm text-white-400 hover:underline">
+                  Forgot password?
+                </a>
               </div>
 
-              <div class="flex items-center justify-between">
-                <div class="flex items-center">
-                  <input id="remember_me" name="remember_me" type="checkbox" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"></input>
-                  <label for="remember_me" class="ml-2 block text-sm text-gray-900">Remember Me</label>
-                </div>
+              {/* Login Button */}
+              <button
+                type="submit"
+                className="
+                  w-full py-3
+                  bg-white/80 hover:bg-white
+                  border border-black/20
+                  rounded-lg
+                  text-black font-semibold
+                  transition-colors
+                "
+              >
+                Login
+              </button>
+            </form>
 
-                <div class="text-sm">
-                  <a href="#" class="font-medium text-blue-600 hover:text-blue-500">Forgot your password?</a>
-                </div>
-              </div>
-
-              <div>
-                <button onClick={handleLogin} type="submit" class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                  Login
-                </button>
-              </div>
-          </form>
-
-          <div class="mt-6">
-
-            <div class="relative">
-              <div class="absolute inset-0 flex items-center">
-                <div class="w-full border-t border-gray-300"></div>
-              </div>
-
-              <div class="relative flex justify-center text-sm">
-                <span class="px-2 bg-gray-100 test-gray-500">
+            {/* Social Logins */}
+            <div className="mt-8">
+              <div className="relative flex items-center justify-center">
+                <div className="absolute inset-0 border-t border-slate-500 opacity-50" />
+                <span className="bg-transparent px-2 text-sm text-slate-300 z-10 mt-3">
                   Or continue with
                 </span>
               </div>
+
+              <div className="mt-6 grid grid-cols-3 gap-3">
+                {/* Facebook */}
+                <a
+                  href="#"
+                  className="
+                    flex items-center justify-center
+                    px-4 py-2
+                    bg-white/80 hover:bg-white
+                    border border-white/20
+                    rounded-lg
+                    shadow-sm
+                    text-white
+                    transition-colors
+                  "
+                >
+                  <img
+                    className="h-5 w-5"
+                    src="https://www.svgrepo.com/show/512120/facebook-176.svg"
+                    alt="facebook"
+                  />
+                </a>
+                {/* Twitter */}
+                <a
+                  href="#"
+                  className="
+                    flex items-center justify-center
+                    px-4 py-2
+                    bg-white/80 hover:bg-white
+                    border border-white/20
+                    rounded-lg
+                    shadow-sm
+                    text-white
+                    transition-colors
+                  "
+                >
+                  <img
+                    className="h-5 w-5"
+                    src="https://www.svgrepo.com/show/513008/twitter-154.svg"
+                    alt="twitter"
+                  />
+                </a>
+                {/* Google */}
+                <a
+                  href="#"
+                  className="
+                    flex items-center justify-center
+                    px-4 py-2
+                    bg-white/80 hover:bg-white
+                    border border-white/20
+                    rounded-lg
+                    shadow-sm
+                    text-white
+                    transition-colors
+                  "
+                >
+                  <img
+                    className="h-5 w-5"
+                    src="https://www.svgrepo.com/show/506498/google.svg"
+                    alt="google"
+                  />
+                </a>
+              </div>
             </div>
 
-            <div class="mt-6 grid grid-cols-3 gap-3">
-              <div>
-                <a href="#" class="w-full flex items-center justify-center px-8 py-3 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
-                  <img class="h-5 w-5" src="https://www.svgrepo.com/show/512120/facebook-176.svg" alt=""></img>
-                </a>
-              </div>
-
-              <div>
-                <a href="#" class="w-full flex items-center justify-center px-8 py-3 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
-                  <img class="h-5 w-5" src="https://www.svgrepo.com/show/513008/twitter-154.svg" alt=""></img>
-                </a>
-              </div>
-
-              <div>
-                <a href="#" class="w-full flex items-center justify-center px-8 py-3 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
-                  <img class="h-6 w-6" src="https://www.svgrepo.com/show/506498/google.svg" alt=""></img>
-                </a>
-              </div>
-            </div>
+            {/* Sign Up Link */}
+            <p className="mt-6 text-center text-sm text-slate-300">
+              Don&apos;t have an account?{" "}
+              <a
+                href="/signup"
+                className="text-white font-semibold hover:underline"
+              >
+                Create one
+              </a>
+            </p>
           </div>
         </div>
       </div>
-    </div>
+    </PageWrapper>
   );
 };
 
