@@ -3,27 +3,6 @@ import { EyeIcon, HomeIcon, UserCircleIcon } from '@heroicons/react/24/outline';
 import PageWrapper from '../components/PageWrapper';
 import Navbar from '../components/Navbar';
 
-// Mock data for initial display
-var astockData = {
-  name: 'Apple Inc.',
-  symbol: 'AAPL',
-  price: '222.46',
-  change: '-0.60',
-  metrics: {
-    //weekHighLow: '166.00 / 260.10',
-    weekHigh: '260.10',
-    weekLow: '166.00',
-    eps: '6.06',
-    revenueGrowth: '2.02%',
-    marketCap: '3.345T',
-    volume: '40,521,968',
-    avgVolume: '47,734,813',
-    dividendYield: '0.45%',
-    beta: '1.24',
-    debtToEquity: '1.51',
-    peRatio: '36.59'
-  }
-};
 
 const DashboardPage = () => {
   const chartContainerRef = useRef(null);
@@ -32,7 +11,8 @@ const DashboardPage = () => {
   const [stockName, setStockName] = useState('');
   const [message, setMessage] = useState(""); // ✅ Success message state
   const [error, setError] = useState(""); // ✅ Error message state
-  const [stockData, setStockData] = useState(astockData);
+  const [stockData, setStockData] = useState('');
+  const [isVisible, setIsVisible] = useState(false);
   
 
   const getStockData = async (stockName) => {
@@ -77,7 +57,7 @@ const DashboardPage = () => {
         const historicalInfo = await his_response.json();
         console.log("Historial Data API Response:", historicalInfo);
 
-        // Length - 2 to avoid getting current date's data
+        // Use length - 2 to get latest Close price
         const closeVal = historicalInfo.data[Object.keys(historicalInfo.data).length - 2]['Close'];
 
         const calcChange = (((price.data['price'] - closeVal) / closeVal) * 100);
@@ -88,9 +68,8 @@ const DashboardPage = () => {
           compactDisplay: 'short',
         }).format(stockInfo.data['market_cap']);
 
-
         // Update stockData
-         const bstockData = {
+         const stockData = {
           name: stocks.data[0]['2. name'],
           symbol: stocks.data[0]['1. symbol'],
           price: price.data['price'],
@@ -109,7 +88,9 @@ const DashboardPage = () => {
             peRatio: stockInfo.data['pe_ratio']
           }}
         
-        return bstockData
+          setIsVisible(true); // Display Stock Header & Metrics Data
+
+        return stockData;
 
       } else {
         setError(`Fetch stock failed! ${stocks.message}`);  // ✅ Show error message
@@ -159,65 +140,70 @@ const DashboardPage = () => {
 
         {/* Main Content */}
         <div className="mt-4">
-          {/* Stock Header */}
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-2xl font-bold">{stockData.name} ({stockData.symbol})</h1>
-              <div className="flex items-center space-x-2">
-                <span className="text-2xl">${parseFloat(stockData.price).toFixed(2)}</span>
-                <span className={stockData.change >= 0 ? "text-green-500" : "text-red-500"}>({parseFloat(stockData.change).toFixed(2)}%)</span>
-              </div>
-            </div>
-            <button className="text-yellow-500">★</button>
-          </div>
 
-          {/* Metrics Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <MetricCard
-              label="52 Week High/Low"
-              value={parseFloat(stockData.metrics.weekHigh).toFixed(2) + ' / ' + parseFloat(stockData.metrics.weekLow).toFixed(2)}
-              tooltip="The highest and lowest stock price over the past 52 weeks"
-            />
-            <MetricCard
-              label="Earnings Per Share"
-              value={stockData.metrics.eps}
-              tooltip="Company's profit divided by outstanding shares"
-            />
-            <MetricCard
-              label="Revenue Growth"
-              value={parseFloat(stockData.metrics.revenueGrowth).toFixed(2) + '%'}
-              tooltip="Year-over-year revenue growth percentage"
-            />
-            <MetricCard
-              label="Market Cap"
-              value={stockData.metrics.marketCap}
-              tooltip="Total market value of company's outstanding shares"
-            />
-            <MetricCard
-              label="Volume/Average Volume"
-              value={`${Number(stockData.metrics.volume).toLocaleString()} / ${Number(stockData.metrics.avgVolume).toLocaleString()}`}
-              tooltip="Today's trading volume vs 3-month average"
-            />
-            <MetricCard
-              label="Dividend Yield"
-              value={stockData.metrics.dividendYield}
-              tooltip="Annual dividend payments relative to stock price"
-            />
-            <MetricCard
-              label="Beta"
-              value={parseFloat(stockData.metrics.beta).toFixed(2)}
-              tooltip="Stock's volatility compared to the market"
-            />
-            <MetricCard
-              label="Debt-to-Equity Ratio"
-              value={parseFloat(stockData.metrics.debtToEquity).toFixed(2)}
-              tooltip="Total liabilities divided by shareholder equity"
-            />
-            <MetricCard
-              label="P/E Ratio"
-              value={parseFloat(stockData.metrics.peRatio).toFixed(2)}
-              tooltip="Stock price relative to earnings per share"
-            />
+          <div>
+            {/* Stock Header */}
+            {isVisible &&             
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h1 className="text-2xl font-bold">{stockData.name} ({stockData.symbol})</h1>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-2xl">${parseFloat(stockData.price).toFixed(2)}</span>
+                    <span className={stockData.change >= 0 ? "text-green-500" : "text-red-500"}>({parseFloat(stockData.change).toFixed(2)}%)</span>
+                  </div>
+                </div>
+                <button className="text-yellow-500">★</button>
+              </div>}
+
+            {/* Metrics Grid */}
+            {isVisible &&
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <MetricCard
+                label="52 Week High/Low"
+                value={parseFloat(stockData.metrics.weekHigh).toFixed(2) + ' / ' + parseFloat(stockData.metrics.weekLow).toFixed(2)}
+                tooltip="The highest and lowest stock price over the past 52 weeks"
+              />
+              <MetricCard
+                label="Earnings Per Share"
+                value={stockData.metrics.eps}
+                tooltip="Company's profit divided by outstanding shares"
+              />
+              <MetricCard
+                label="Revenue Growth"
+                value={parseFloat(stockData.metrics.revenueGrowth).toFixed(2) + '%'}
+                tooltip="Year-over-year revenue growth percentage"
+              />
+              <MetricCard
+                label="Market Cap"
+                value={stockData.metrics.marketCap}
+                tooltip="Total market value of company's outstanding shares"
+              />
+              <MetricCard
+                label="Volume/Average Volume"
+                value={`${Number(stockData.metrics.volume).toLocaleString()} / ${Number(stockData.metrics.avgVolume).toLocaleString()}`}
+                tooltip="Today's trading volume vs 3-month average"
+              />
+              <MetricCard
+                label="Dividend Yield"
+                value={stockData.metrics.dividendYield}
+                tooltip="Annual dividend payments relative to stock price"
+              />
+              <MetricCard
+                label="Beta"
+                value={parseFloat(stockData.metrics.beta).toFixed(2)}
+                tooltip="Stock's volatility compared to the market"
+              />
+              <MetricCard
+                label="Debt-to-Equity Ratio"
+                value={parseFloat(stockData.metrics.debtToEquity).toFixed(2)}
+                tooltip="Total liabilities divided by shareholder equity"
+              />
+              <MetricCard
+                label="P/E Ratio"
+                value={parseFloat(stockData.metrics.peRatio).toFixed(2)}
+                tooltip="Stock price relative to earnings per share"
+              />
+            </div>}
           </div>
 
           {/* Tabs */}
