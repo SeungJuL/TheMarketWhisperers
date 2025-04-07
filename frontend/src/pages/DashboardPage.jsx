@@ -3,28 +3,120 @@ import { EyeIcon, HomeIcon, UserCircleIcon } from '@heroicons/react/24/outline';
 import PageWrapper from '../components/PageWrapper';
 import Navbar from '../components/Navbar';
 
+// Mock data for initial display
+var astockData = {
+  name: 'Apple Inc.',
+  symbol: 'AAPL',
+  price: '222.46',
+  change: '-0.60',
+  metrics: {
+    //weekHighLow: '166.00 / 260.10',
+    weekHigh: '260.10',
+    weekLow: '166.00',
+    eps: '6.06',
+    revenueGrowth: '2.02%',
+    marketCap: '3.345T',
+    volume: '40,521,968',
+    avgVolume: '47,734,813',
+    dividendYield: '0.45%',
+    beta: '1.24',
+    debtToEquity: '1.51',
+    peRatio: '36.59'
+  }
+};
+
 const DashboardPage = () => {
   const chartContainerRef = useRef(null);
   const [activeTab, setActiveTab] = useState('AI Insights');
   const [searchQuery, setSearchQuery] = useState('');
+  const [stockName, setStockName] = useState('');
+  const [message, setMessage] = useState(""); // ✅ Success message state
+  const [error, setError] = useState(""); // ✅ Error message state
+  const [stockData, setStockData] = useState(astockData);
   
-  // Mock data for initial display
-  const stockData = {
-    name: 'Apple Inc.',
-    symbol: 'AAPL',
-    price: '222.46',
-    change: '-0.60',
-    metrics: {
-      weekHighLow: '166.00 / 260.10',
-      eps: '6.06',
-      revenueGrowth: '2.02%',
-      marketCap: '3.345T',
-      volume: '40,521,968',
-      avgVolume: '47,734,813',
-      dividendYield: '0.45%',
-      beta: '1.24',
-      debtToEquity: '1.51',
-      peRatio: '36.59'
+
+  const getStockData = async (stockName) => {
+
+    //e.preventDefault();
+    setMessage("");  // Clear messages before a new attempt
+    setError("");
+
+    try {
+      const response = await fetch("http://localhost:8080/stock/search?stock_name=" + stockName, {
+        method: "GET"
+      });
+
+      const stocks = await response.json();
+      console.log("API Response:", stocks); // Debugging
+
+      if (stocks.success) {
+
+        console.log("GOT:" + stocks.data[0]['1. symbol']);  // ✅ Show success message
+
+        // Stock price
+        const price_response = await fetch("http://localhost:8080/stock/" + stocks.data[0]['1. symbol'] + "/price?asset_symbol=" + stocks.data[0]['1. symbol'], {
+          method: "GET"
+        });
+
+        const price = await price_response.json();
+        console.log("Price API Response:", price);
+
+        // Stock metrics
+        const si_response = await fetch("http://localhost:8080/stock/" + stocks.data[0]['1. symbol'] + "/info", {
+          method: "GET"
+        });
+
+        const stockInfo = await si_response.json();
+        console.log("Stock Info API Response:", stockInfo);
+
+        // Historical data 
+        const his_response = await fetch("http://localhost:8080/stock/" + stocks.data[0]['1. symbol'] + "/history", {
+          method: "GET"
+        });
+
+        const historicalInfo = await his_response.json();
+        console.log("Historial Data API Response:", historicalInfo);
+
+        // Length - 2 to avoid getting current date's data
+        const closeVal = historicalInfo.data[Object.keys(historicalInfo.data).length - 2]['Close'];
+
+        const calcChange = (((price.data['price'] - closeVal) / closeVal) * 100);
+
+        // Converts large numbers to K, M, B, and T format for market cap readability
+        const formattedMarketCap = new Intl.NumberFormat('en-US', {
+          notation: 'compact',
+          compactDisplay: 'short',
+        }).format(stockInfo.data['market_cap']);
+
+
+        // Update stockData
+         const bstockData = {
+          name: stocks.data[0]['2. name'],
+          symbol: stocks.data[0]['1. symbol'],
+          price: price.data['price'],
+          change: calcChange,
+          metrics: {
+            weekHigh: stockInfo.data['52_week_high'],
+            weekLow: stockInfo.data['52_week_low'],
+            eps: stockInfo.data['eps'],
+            revenueGrowth: (stockInfo.data['revenue_growth'] * 100),
+            marketCap: formattedMarketCap,
+            volume: stockInfo.data['volume'],
+            avgVolume: stockInfo.data['average_volume'],
+            dividendYield: stockInfo.data['dividend_yield'],
+            beta: stockInfo.data['beta'],
+            debtToEquity: stockInfo.data['debt_to_equity'],
+            peRatio: stockInfo.data['pe_ratio']
+          }}
+        
+        return bstockData
+
+      } else {
+        setError(`Fetch stock failed! ${stocks.message}`);  // ✅ Show error message
+      }
+    } catch (error) {
+      console.error("Login Error:", error);
+      setError("Failed to connect to the server.");
     }
   };
 
@@ -57,6 +149,10 @@ const DashboardPage = () => {
               className="bg-slate-800 text-white px-6 py-3 border-b-2 border-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-lg hover:border-blue-400 transition-all duration-300 rounded-lg"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyUp={(evt) => { if (evt.key === 'Enter') { 
+                  
+                  getStockData(searchQuery).then((val) => { setStockData(val) });
+               }}}
             />
           </div>
         </div>
@@ -68,8 +164,8 @@ const DashboardPage = () => {
             <div>
               <h1 className="text-2xl font-bold">{stockData.name} ({stockData.symbol})</h1>
               <div className="flex items-center space-x-2">
-                <span className="text-2xl">${stockData.price}</span>
-                <span className="text-red-500">({stockData.change}%)</span>
+                <span className="text-2xl">${parseFloat(stockData.price).toFixed(2)}</span>
+                <span className={stockData.change >= 0 ? "text-green-500" : "text-red-500"}>({parseFloat(stockData.change).toFixed(2)}%)</span>
               </div>
             </div>
             <button className="text-yellow-500">★</button>
@@ -79,7 +175,7 @@ const DashboardPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <MetricCard
               label="52 Week High/Low"
-              value={stockData.metrics.weekHighLow}
+              value={parseFloat(stockData.metrics.weekHigh).toFixed(2) + ' / ' + parseFloat(stockData.metrics.weekLow).toFixed(2)}
               tooltip="The highest and lowest stock price over the past 52 weeks"
             />
             <MetricCard
@@ -89,7 +185,7 @@ const DashboardPage = () => {
             />
             <MetricCard
               label="Revenue Growth"
-              value={stockData.metrics.revenueGrowth}
+              value={parseFloat(stockData.metrics.revenueGrowth).toFixed(2) + '%'}
               tooltip="Year-over-year revenue growth percentage"
             />
             <MetricCard
@@ -99,7 +195,7 @@ const DashboardPage = () => {
             />
             <MetricCard
               label="Volume/Average Volume"
-              value={`${stockData.metrics.volume} / ${stockData.metrics.avgVolume}`}
+              value={`${Number(stockData.metrics.volume).toLocaleString()} / ${Number(stockData.metrics.avgVolume).toLocaleString()}`}
               tooltip="Today's trading volume vs 3-month average"
             />
             <MetricCard
@@ -109,17 +205,17 @@ const DashboardPage = () => {
             />
             <MetricCard
               label="Beta"
-              value={stockData.metrics.beta}
+              value={parseFloat(stockData.metrics.beta).toFixed(2)}
               tooltip="Stock's volatility compared to the market"
             />
             <MetricCard
               label="Debt-to-Equity Ratio"
-              value={stockData.metrics.debtToEquity}
+              value={parseFloat(stockData.metrics.debtToEquity).toFixed(2)}
               tooltip="Total liabilities divided by shareholder equity"
             />
             <MetricCard
               label="P/E Ratio"
-              value={stockData.metrics.peRatio}
+              value={parseFloat(stockData.metrics.peRatio).toFixed(2)}
               tooltip="Stock price relative to earnings per share"
             />
           </div>
