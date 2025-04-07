@@ -1,6 +1,6 @@
 from db.psql import conn_psql
 
-class Watchlist_Model:
+class WatchlistModel:
     def create_watchlist(self, user_id):
         psql_db = conn_psql()
         db_cursor = psql_db.cursor()

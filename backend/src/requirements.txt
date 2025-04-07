@@ -8,6 +8,4 @@ python-dotenv
 yfinance
 openai
 pytest
-pytest-cov
-pytest-mock
-pandas
+pylint

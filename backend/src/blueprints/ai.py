@@ -1,8 +1,8 @@
 from flask import Blueprint, request
-from controllers.ai_controller import AI
+from controllers.ai_controller import AIController
 
 ai_blueprint = Blueprint('ai', __name__)
-ai_controller = AI()
+ai_controller = AIController()
 
 @ai_blueprint.route('/', methods=['POST'])
 def search():

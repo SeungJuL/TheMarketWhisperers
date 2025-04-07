@@ -1,6 +1,6 @@
 from db.psql import conn_psql
 
-class User_Model:
+class UserModel:
     def find_by_id(self, user_id):
         psql_db = conn_psql()
         db_cursor = psql_db.cursor()

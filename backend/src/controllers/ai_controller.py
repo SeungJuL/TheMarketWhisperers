@@ -1,7 +1,7 @@
 from services.ai_service import AIService
 from dtos.response_dto import ResponseUtil
 
-class AI:
+class AIController:
     def __init__(self):
         self.ai_service = AIService()
 

@@ -1,7 +1,7 @@
 from services.stock_service import StockService
 from dtos.response_dto import ResponseUtil
 
-class Stock:
+class StockController:
     def __init__(self):
         self.stock_service = StockService()
 

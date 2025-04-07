@@ -1,9 +1,9 @@
 from flask import Blueprint, request
 from flask_login import login_required
-from controllers.watchlist_controller import Watchlist_Controller
+from controllers.watchlist_controller import WatchlistController
 
 watchlist_blueprint = Blueprint('watchlist', __name__)
-watchlist_controller = Watchlist_Controller()
+watchlist_controller = WatchlistController()
 
 @watchlist_blueprint.route('', methods=['GET'])
 @login_required

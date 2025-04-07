@@ -1,10 +1,10 @@
 from flask_login import current_user
-from models.watchlist_model import Watchlist_Model
+from models.watchlist_model import WatchlistModel
 from dtos.response_dto import ResponseUtil
 
-class Watchlist_Controller:
+class WatchlistController:
     def __init__(self):
-        self.watchlist_model = Watchlist_Model()
+        self.watchlist_model = WatchlistModel()
 
     def get_watchlists(self):
         try:

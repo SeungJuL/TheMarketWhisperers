@@ -1,7 +1,7 @@
 from flask_login import UserMixin, login_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
-from models.user_model import User_Model
-from models.watchlist_model import Watchlist_Model
+from models.user_model import UserModel
+from models.watchlist_model import WatchlistModel
 from dtos.response_dto import ResponseUtil
 
 class User(UserMixin):
@@ -15,7 +15,7 @@ class User(UserMixin):
     
     @classmethod
     def get(cls, user_id):
-        user_model = User_Model();
+        user_model = UserModel();
         user = user_model.find_by_id(user_id)
         if user:
             return cls(user[0], user[1], user[2])
@@ -23,8 +23,8 @@ class User(UserMixin):
 
 class UserController:
     def __init__(self):
-        self.user_model = User_Model()
-        self.watchlist_model = Watchlist_Model()
+        self.user_model = UserModel()
+        self.watchlist_model = WatchlistModel()
 
     def register(self, data):
         try:

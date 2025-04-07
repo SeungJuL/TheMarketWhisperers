@@ -1,8 +1,8 @@
 from flask import Blueprint, request
-from controllers.stock_controller import Stock
+from controllers.stock_controller import StockController
 
 stock_blueprint = Blueprint('stock', __name__)
-stock_controller = Stock()
+stock_controller = StockController()
 
 @stock_blueprint.route('/search', methods= ['GET'])
 def search():
