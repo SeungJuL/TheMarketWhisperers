@@ -77,6 +77,8 @@ class UserController:
     def profile(self):
         try:
             user_info = self.user_model.find_by_id(current_user.id)
+            if user_info is None:
+                return ResponseUtil.failure('User not found', None), 400
             user_profile = {
                 "email": user_info[1],
                 "username": user_info[3]
