@@ -7,3 +7,5 @@ requests
 python-dotenv
 yfinance
 openai
+pytest
+pylint

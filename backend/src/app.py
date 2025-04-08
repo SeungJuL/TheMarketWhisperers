@@ -1,12 +1,12 @@
-from flask import Flask, jsonify, request, render_template, make_response, session
-from flask_login import LoginManager, current_user, login_required, login_user, logout_user
+from flask import Flask, jsonify, make_response
+from flask_login import LoginManager
 from flask_cors import CORS 
 from dotenv import load_dotenv
-from controller.user_controller import User
-from blueprint.user import user_blueprint
-from blueprint.stock import stock_blueprint
-from blueprint.watchlist import watchlist_blueprint
-from blueprint.ai import ai_blueprint
+from controllers.user_controller import User
+from blueprints.user import user_blueprint
+from blueprints.stock import stock_blueprint
+from blueprints.watchlist import watchlist_blueprint
+from blueprints.ai import ai_blueprint
 import os
 
 
