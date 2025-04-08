@@ -59,7 +59,7 @@ const LoginPage = () => {
 
         <div class="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
 
-          <form class="space-y-6" acion="#" method="POST">
+          <form class="space-y-6" action="#" method="POST">
             
             <div>
               <label for="email" class="block text-sm font-medium text-gray-700">Email Address</label>
