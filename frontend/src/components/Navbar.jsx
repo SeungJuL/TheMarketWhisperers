@@ -47,7 +47,7 @@ const Navbar = ({ user, setUser }) => {
               <span className="hidden md:block text-slate-300 text-sm">
                 Welcome,{" "}
                 <span className="font-semibold text-white">
-                  {user?.first_name}
+                  {user.username}
                 </span>
               </span>
               <button

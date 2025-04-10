@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import PageWrapper from '../components/PageWrapper';
 
-const LoginPage = () => {
+const LoginPage = ({ setUser }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState(""); // ✅ Success message state
@@ -25,9 +25,10 @@ const LoginPage = () => {
       console.log("API Response:", data); // Debugging
 
       if (data.success) {
-        localStorage.setItem("token", data.token);
+        localStorage.setItem("token", data.data.token); // Store JWT token
+        setUser(data.data); // Update user state
         setMessage("Login Successful! Redirecting...");  // ✅ Show success message
-        setTimeout(() => navigate("/"), 2000);  // Redirect after 2 seconds
+        setTimeout(() => navigate("/dashboard"), 2000);  // Redirect after 2 seconds
       } else {
         setError(`Login failed! ${data.message}`);  // ✅ Show error message
       }
@@ -59,7 +60,7 @@ const LoginPage = () => {
 
         <div class="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
 
-          <form class="space-y-6" action="#" method="POST">
+          <form class="space-y-6" onSubmit={handleLogin}>
             
             <div>
               <label for="email" class="block text-sm font-medium text-gray-700">Email Address</label>
@@ -91,7 +92,7 @@ const LoginPage = () => {
               </div>
 
               <div>
-                <button onClick={handleLogin} type="submit" class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                <button type="submit" class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                   Login
                 </button>
               </div>
