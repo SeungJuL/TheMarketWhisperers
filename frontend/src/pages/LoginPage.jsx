@@ -29,9 +29,20 @@ const LoginPage = ({ setUser }) => {
         console.log("Token from API Response:", token); // Debugging
         if (token) {
           localStorage.setItem("token", token); // Store token in localStorage
-          setUser(data.data); // Update user state
-          setMessage("Login Successful! Redirecting...");
-          setTimeout(() => navigate("/dashboard"), 2000);
+
+          // Fetch user profile after login
+          const profileResponse = await fetch("http://127.0.0.1:8080/user/profile", {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const profileData = await profileResponse.json();
+
+          if (profileData.success) {
+            setUser(profileData.data); // Update user state with profile data
+            setMessage("Login Successful! Redirecting...");
+            setTimeout(() => navigate("/dashboard"), 2000);
+          } else {
+            setError("Failed to fetch user profile.");
+          }
         } else {
           setError("Token is missing in the response.");
         }
