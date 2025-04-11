@@ -215,12 +215,12 @@ const ProfilePage = ({ user }) => {
     return (
     <PageWrapper>
       <div className="flex flex-col min-h-screen">
-        <div className="max-w-6xl mx-auto px-4 w-full mt-32">
+        <div className="max-w-6xl mx-auto px-4 w-full mt-28">
           {/* Header Section - Fixed height */}
           <div className="bg-slate-700 rounded-lg border border-slate-500 p-6 mb-6 h-[120px]">
-            <div className="flex items-center space-x-6">
+            <div className="flex items-center space-x-6 h-full"> {/* Adjusted alignment */}
               <img
-                src={user.profile_image}
+                src={user.profile_image || "/default-profile-icon.png"} // Default profile icon
                 alt="Profile"
                 className="w-24 h-24 rounded-full border-4 border-slate-500"
               />
@@ -232,7 +232,7 @@ const ProfilePage = ({ user }) => {
                     {user.account_type}
                   </span>
                   <span className="ml-4 text-sm text-slate-400">
-                    Member since {formatDate(user.created_at)}
+                    Member since {user.created_at ? formatDate(user.created_at) : "N/A"}
                   </span>
                 </div>
               </div>
@@ -240,7 +240,7 @@ const ProfilePage = ({ user }) => {
           </div>
 
           {/* Tabs - Fixed height */}
-          <div className="flex space-x-4 h-[48px] mb-6">
+          <div className="flex space-x-4 h-[48px] mb-2">
             {['profile', 'watchlist', 'activity', 'settings'].map((tab) => (
               <button
                 key={tab}
@@ -256,8 +256,8 @@ const ProfilePage = ({ user }) => {
             ))}
           </div>
 
-          {/* Messages - Fixed height container */}
-          <div className="h-[72px] mb-6">
+          {/* Messages */}
+          <div className="mb-4">
             {message && <div className="w-full p-4 bg-green-800 text-white rounded-lg">{message}</div>}
             {error && <div className="w-full p-4 bg-red-800 text-white rounded-lg">{error}</div>}
           </div>
@@ -281,8 +281,8 @@ const ProfilePage = ({ user }) => {
                           <p>{user.email}</p>
                         </div>
                         <div>
-                          <p className="text-slate-400">Location</p>
-                          <p>{user.location}</p>
+                          <p className="text-slate-400">Username</p>
+                          <p>{user.username}</p>
                         </div>
                       </div>
                     </div>

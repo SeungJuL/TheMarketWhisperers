@@ -7,6 +7,7 @@ import jwt  # Add this import
 from datetime import datetime, timedelta  # Add this import
 import os  # Ensure this import is present
 import logging  # Add this import
+from flask import request  # Add this import
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -102,19 +103,26 @@ class UserController:
             logging.error(f"Error occurred: {e}")  # Debugging: Log any exceptions
             return ResponseUtil.error('An error occurred during login', str(e)), 500
         
-    @login_required
-    def profile(self):
+    def profile(self):  # Removed @login_required decorator
         try:
-            user_info = self.user_model.find_by_id(current_user.id)
+            user_id = request.user_id  # Use user_id from the request object
+            print("User ID from token:", user_id)  # Debugging
+
+            user_info = self.user_model.find_by_id(user_id)
+            print("User Info Retrieved:", user_info)  # Debugging
+
             if not user_info:
+                print("User not found in database")  # Debugging
                 return ResponseUtil.failure('User not found', None), 400
 
             user_profile = {
                 "user_id": user_info[0],
                 "email": user_info[1],
                 "username": user_info[3],
-                # Removed additional fields to match the original implementation
+                "created_at": user_info[4],  # Include created_at field
             }
+            print("User Profile Response:", user_profile)  # Debugging
             return ResponseUtil.success('Success getting user profile', user_profile), 200
         except Exception as e:
+            print("Error in profile method:", e)  # Debugging
             return ResponseUtil.error('An error occurred while fetching profile', str(e)), 500
