@@ -13,12 +13,14 @@ function App() {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
+    console.log("Token retrieved from localStorage:", token); // Debugging
     if (token) {
       fetch("http://127.0.0.1:8080/user/profile", {
         headers: { Authorization: `Bearer ${token}` },
       })
         .then((res) => res.json())
         .then((data) => {
+          console.log("Profile API Response:", data); // Debugging
           if (data.success) {
             setUser(data.data); // Update user state with backend response
           } else {

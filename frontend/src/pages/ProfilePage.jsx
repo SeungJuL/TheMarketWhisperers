@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import PageWrapper from '../components/PageWrapper';
 
 const ProfilePage = ({ user }) => {
@@ -21,6 +21,89 @@ const ProfilePage = ({ user }) => {
   const [preferences, setPreferences] = useState(user?.preferences || {});
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [watchlist, setWatchlist] = useState([]);
+  const [newItem, setNewItem] = useState({ asset_symbol: "", name: "" });
+
+  useEffect(() => {
+    if (activeTab === 'watchlist') {
+      fetchWatchlist();
+    }
+  }, [activeTab]);
+
+  const fetchWatchlist = async () => {
+    setMessage("");
+    setError("");
+    try {
+      const token = localStorage.getItem("token");
+      console.log("Token retrieved from localStorage:", token); // Debugging
+      const response = await fetch("http://127.0.0.1:8080/watchlist", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      console.log("Watchlist API Response:", response); // Debugging
+      const data = await response.json();
+      if (data.success) {
+        setWatchlist(data.data);
+      } else {
+        setError(data.message || "Failed to fetch watchlist");
+      }
+    } catch (error) {
+      console.error("Fetch Watchlist Error:", error);
+      setError("Failed to connect to the server");
+    }
+  };
+
+  const handleAddToWatchlist = async () => {
+    setMessage("");
+    setError("");
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch("http://127.0.0.1:8080/watchlist", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(newItem),
+      });
+      const data = await response.json();
+      if (data.success) {
+        setMessage("Item added to watchlist successfully!");
+        setNewItem({ asset_symbol: "", name: "" });
+        fetchWatchlist();
+      } else {
+        setError(data.message || "Failed to add item to watchlist");
+      }
+    } catch (error) {
+      console.error("Add to Watchlist Error:", error);
+      setError("Failed to connect to the server");
+    }
+  };
+
+  const handleRemoveFromWatchlist = async (asset_symbol) => {
+    setMessage("");
+    setError("");
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch("http://127.0.0.1:8080/watchlist", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ asset_symbol }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        setMessage("Item removed from watchlist successfully!");
+        fetchWatchlist();
+      } else {
+        setError(data.message || "Failed to remove item from watchlist");
+      }
+    } catch (error) {
+      console.error("Remove from Watchlist Error:", error);
+      setError("Failed to connect to the server");
+    }
+  };
 
   const handleProfileChange = (e) => {
     const { name, value } = e.target;
@@ -286,21 +369,51 @@ const ProfilePage = ({ user }) => {
             {activeTab === 'watchlist' && (
               <div className="h-full">
                 <h2 className="text-xl font-semibold mb-4">My Watchlist</h2>
+                {message && <div className="w-full p-4 bg-green-800 text-white rounded-lg">{message}</div>}
+                {error && <div className="w-full p-4 bg-red-800 text-white rounded-lg">{error}</div>}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {user.watchlist.map((stock) => (
+                  {watchlist.map((item) => (
                     <div
-                      key={stock.symbol}
+                      key={item.asset_symbol}
                       className="bg-slate-600 p-4 rounded-lg flex justify-between items-center"
                     >
                       <div>
-                        <h3 className="font-semibold">{stock.name}</h3>
-                        <p className="text-sm text-slate-300">{stock.symbol}</p>
+                        <h3 className="font-semibold">{item.name}</h3>
+                        <p className="text-sm text-slate-300">{item.asset_symbol}</p>
                       </div>
-                      <div className="text-right">
-                        <p className="text-sm text-slate-300">Added {formatDate(stock.added_on)}</p>
-                      </div>
+                      <button
+                        onClick={() => handleRemoveFromWatchlist(item.asset_symbol)}
+                        className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+                      >
+                        Remove
+                      </button>
                     </div>
                   ))}
+                </div>
+                <div className="mt-6">
+                  <h3 className="text-lg font-semibold mb-2">Add to Watchlist</h3>
+                  <div className="flex space-x-4">
+                    <input
+                      type="text"
+                      placeholder="Asset Symbol"
+                      value={newItem.asset_symbol}
+                      onChange={(e) => setNewItem({ ...newItem, asset_symbol: e.target.value })}
+                      className="w-1/3 p-2 text-black bg-white rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Name"
+                      value={newItem.name}
+                      onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
+                      className="w-1/3 p-2 text-black bg-white rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    />
+                    <button
+                      onClick={handleAddToWatchlist}
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+                    >
+                      Add
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
@@ -432,4 +545,3 @@ const ProfilePage = ({ user }) => {
   };
   
   export default ProfilePage;
-  

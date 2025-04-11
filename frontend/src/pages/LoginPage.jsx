@@ -11,7 +11,7 @@ const LoginPage = ({ setUser }) => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    setMessage("");  // Clear messages before a new attempt
+    setMessage("");
     setError("");
 
     try {
@@ -22,15 +22,21 @@ const LoginPage = ({ setUser }) => {
       });
 
       const data = await response.json();
-      console.log("API Response:", data); // Debugging
+      console.log("API Response Data:", data); // Debugging
 
       if (data.success) {
-        localStorage.setItem("token", data.data.token); // Store JWT token
-        setUser(data.data); // Update user state
-        setMessage("Login Successful! Redirecting...");  // ✅ Show success message
-        setTimeout(() => navigate("/dashboard"), 2000);  // Redirect after 2 seconds
+        const token = data.data?.token; // Safely access token
+        console.log("Token from API Response:", token); // Debugging
+        if (token) {
+          localStorage.setItem("token", token); // Store token in localStorage
+          setUser(data.data); // Update user state
+          setMessage("Login Successful! Redirecting...");
+          setTimeout(() => navigate("/dashboard"), 2000);
+        } else {
+          setError("Token is missing in the response.");
+        }
       } else {
-        setError(`Login failed! ${data.message}`);  // ✅ Show error message
+        setError(`Login failed! ${data.message}`);
       }
     } catch (error) {
       console.error("Login Error:", error);
