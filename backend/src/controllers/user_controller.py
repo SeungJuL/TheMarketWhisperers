@@ -54,7 +54,22 @@ class UserController:
                 return ResponseUtil.error('Register Failed', None), 500
             else:
                 self.watchlist_model.create_watchlist(user[0])
-                return ResponseUtil.success('Register Success', {"email": user[1], "username": user[3]}), 201
+
+                # Generate JWT token
+                token = jwt.encode(
+                    {
+                        "user_id": user[0],
+                        "exp": datetime.utcnow() + timedelta(hours=24)  # Token expires in 24 hours
+                    },
+                    os.getenv('SESSION_SECRET_KEY'),
+                    algorithm="HS256"
+                )
+
+                return ResponseUtil.success('Register Success', {
+                    "email": user[1],
+                    "username": user[3],
+                    "token": token
+                }), 201
         except Exception as e:
             return ResponseUtil.error('An error occurred during registration', str(e)), 500
 
