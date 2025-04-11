@@ -1,7 +1,9 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom"; // Add this import
 import PageWrapper from '../components/PageWrapper';
 
 const SignupPage = ({ setUser }) => {
+  const navigate = useNavigate(); // Define navigate
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -30,18 +32,23 @@ const SignupPage = ({ setUser }) => {
 
     if (!validatePassword()) return;
 
-    const response = await fetch("http://127.0.0.1:8080/user/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password, username }),
-    });
+    try {
+      const response = await fetch("http://127.0.0.1:8080/user/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, username }),
+      });
 
-    const data = await response.json();
-    if (data.success) {
-      localStorage.setItem("token", data.token);
-      setUser(data.user);
-    } else {
-      alert("Signup failed!");
+      const data = await response.json();
+      if (data.success) {
+        localStorage.setItem("token", data.data.token); // Store JWT token
+        setUser(data.data); // Update user state
+        navigate("/dashboard"); // Redirect to dashboard
+      } else {
+        alert("Signup failed!");
+      }
+    } catch (error) {
+      alert("Failed to connect to the server.");
     }
   };
 
@@ -107,4 +114,3 @@ const SignupPage = ({ setUser }) => {
 };
 
 export default SignupPage;
-  
