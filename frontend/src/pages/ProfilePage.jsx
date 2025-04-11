@@ -226,7 +226,7 @@ const ProfilePage = ({ user }) => {
               />
               <div>
                 <h1 className="text-3xl font-bold">{user.first_name} {user.last_name}</h1>
-                <p className="text-slate-300">@{user.username}</p>
+                <p className="text-slate-300">@{user.username || "N/A"}</p> {/* Ensure username is displayed */}
                 <div className="flex items-center mt-2">
                   <span className="bg-blue-600 text-xs px-2 py-1 rounded">
                     {user.account_type}

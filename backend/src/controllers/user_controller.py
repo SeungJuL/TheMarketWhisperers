@@ -133,7 +133,7 @@ class UserController:
             user_profile = {
                 "user_id": user_info[0],
                 "email": user_info[1],
-                "username": user_info[3],
+                "username": user_info[3],  # Ensure username is included
                 "created_at": user_info[4],  # Include created_at field
             }
             print("User Profile Response:", user_profile)  # Debugging
