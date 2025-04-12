@@ -21,8 +21,17 @@ const HomePage = ({ user }) => {
         <div
           className="absolute inset-0 bg-cover bg-center"
           style={{
-            backgroundImage: 'url("/backgroundhome.png")',
-            filter: "brightness(0.5)", // Dim ONLY the background
+            backgroundImage: `
+        linear-gradient(
+          rgba(15, 23, 42, 0.85), 
+          rgba(15, 23, 42, 0.85)
+        ), 
+        url("/backgroundhome.png")
+      `,
+            backgroundBlendMode: "overlay",
+            // Optionally, you can remove the filter brightness
+            // if the gradient already darkens it enough:
+            // filter: "brightness(0.4)",
           }}
         />
         <div className="relative z-10 flex flex-col items-center justify-center min-h-screen">

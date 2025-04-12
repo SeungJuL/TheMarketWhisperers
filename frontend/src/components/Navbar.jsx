@@ -7,7 +7,7 @@ const Navbar = ({ user, setUser }) => {
   };
 
   return (
-    <nav className="bg-opacity-0 fixed w-full top-0 z-50">
+    <nav className="bg-slate-950 fixed w-full top-0 z-50">
       <div className="flex items-center justify-between h-30 px-10">
         {/* LEFT side: Logo, Dashboard, Profile */}
         <div className="flex items-center">

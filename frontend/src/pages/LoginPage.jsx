@@ -30,9 +30,12 @@ const LoginPage = ({ setUser }) => {
           localStorage.setItem("token", token); // Store token in localStorage
 
           // Fetch user profile after login
-          const profileResponse = await fetch("http://127.0.0.1:8080/user/profile", {
-            headers: { Authorization: `Bearer ${token}` },
-          });
+          const profileResponse = await fetch(
+            "http://127.0.0.1:8080/user/profile",
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
           const profileData = await profileResponse.json();
 
           if (profileData.success) {
@@ -62,8 +65,17 @@ const LoginPage = ({ setUser }) => {
         <div
           className="absolute inset-0 bg-cover bg-center"
           style={{
-            backgroundImage: 'url("/backgroundhome.png")',
-            filter: "brightness(0.5)", // Dims the background
+            backgroundImage: `
+        linear-gradient(
+          rgba(15, 23, 42, 0.85), 
+          rgba(15, 23, 42, 0.85)
+        ), 
+        url("/backgroundhome.png")
+      `,
+            backgroundBlendMode: "overlay",
+            // Optionally, you can remove the filter brightness
+            // if the gradient already darkens it enough:
+            // filter: "brightness(0.4)",
           }}
         />
         {/* Content container */}
@@ -117,7 +129,6 @@ const LoginPage = ({ setUser }) => {
                         8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"
                     />
                   </svg>
-
                 </div>
               </div>
 

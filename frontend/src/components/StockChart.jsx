@@ -109,13 +109,13 @@ const StockChart = ({ historicalInfo }) => {
           },
           title: {
             display: true,
-            text: 'Stock Price History',
+            text: "Stock Price History",
             font: {
-                size: 18,
-                weight: 'bold',
+              size: 18,
+              weight: "bold",
             },
-            color: '#fff',
-          }
+            color: "#fff",
+          },
         },
       },
     });
@@ -125,12 +125,21 @@ const StockChart = ({ historicalInfo }) => {
         chartRef.current.destroy();
       }
     };
-  }, [chartLabels, chartClose, chartHighs, chartLows, showClose, showHigh, showLow]);
+  }, [
+    chartLabels,
+    chartClose,
+    chartHighs,
+    chartLows,
+    showClose,
+    showHigh,
+    showLow,
+  ]);
 
   return (
-    <div>
-      <div style={{ width: "800px", height: "400px", marginBottom: "20px" }}>
-        <canvas ref={canvasRef}></canvas>
+    <div className="w-full">
+      {/* Chart container with a fixed aspect ratio via h-96 */}
+      <div className="relative w-full h-72 md:h-96 bg-slate-950">
+        <canvas ref={canvasRef} className="w-full h-full" />
       </div>
 
       {/* Checkbox Section Below the Graph */}
