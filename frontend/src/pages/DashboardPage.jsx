@@ -263,7 +263,7 @@ const DashboardPage = () => {
           {/* Tabs */}
           <div className="border-b border-slate-600 mb-4">
             <div className="flex space-x-4">
-              {['AI Insights', 'Company Background', 'Fundamentals', 'Technicals'].map((tab) => (
+              {['AI Insights', 'Company Background'].map((tab) => (
                 <button
                   key={tab}
                   className={`py-2 px-4 ${
