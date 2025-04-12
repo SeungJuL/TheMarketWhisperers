@@ -1,8 +1,6 @@
 import React, { useState } from "react";
 import PageWrapper from "../components/PageWrapper";
-import { useState } from "react";
 import { useNavigate } from "react-router-dom"; // Add this import
-import PageWrapper from '../components/PageWrapper';
 
 const SignupPage = ({ setUser }) => {
   const navigate = useNavigate(); // Define navigate
