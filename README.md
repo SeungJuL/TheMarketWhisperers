@@ -1,14 +1,15 @@
 # The Market Whisperers
 
-A modern full-stack application for market analysis and insights, built with React, Express, and MongoDB.
+A modern full-stack application for market analysis and insights, built with React, Flask, and PostgreSQL.
 
 ## 🚀 Features
 
-- Real-time market data analysis
+- Real-time market data analysis using yfinance
 - Interactive data visualization
 - User authentication and authorization
 - Responsive and modern UI with Tailwind CSS
 - RESTful API architecture
+- AI-powered market insights using OpenAI
 
 ## 🛠️ Tech Stack
 
@@ -22,12 +23,15 @@ A modern full-stack application for market analysis and insights, built with Rea
 - Framer Motion
 
 ### Backend
-- Node.js
-- Express.js
-- MongoDB
-- Mongoose
-- CORS
-- Morgan (logging)
+- Python 3.x
+- Flask
+- Flask-CORS
+- Flask-Login
+- PostgreSQL
+- yfinance
+- OpenAI API
+- pytest (testing)
+- pylint (code quality)
 
 ## 📁 Project Structure
 
@@ -35,13 +39,22 @@ A modern full-stack application for market analysis and insights, built with Rea
 TheMarketWhisperers/
 ├── frontend/              # React frontend application
 │   ├── src/              # Source files
-│   ├── public/           # Static assets
-│   └── package.json      # Frontend dependencies
-├── backend/              # Express backend server
-│   ├── src/             # Source files
-│   ├── server.js        # Server entry point
-│   └── package.json     # Backend dependencies
-└── package.json         # Root project configuration
+│   │   ├── components/   # React components
+│   │   ├── pages/       # Page components
+│   │   └── App.jsx      # Main application component
+│   ├── public/          # Static assets
+│   └── package.json     # Frontend dependencies
+├── backend/             # Flask backend server
+│   ├── src/            # Source files
+│   │   ├── controllers/ # API controllers
+│   │   ├── models/     # Data models
+│   │   ├── services/   # Business logic
+│   │   ├── tests/      # Test suite
+│   │   ├── dtos/       # Data transfer objects
+│   │   ├── blueprints/ # Flask blueprints
+│   │   └── app.py      # Flask application
+│   └── requirements.txt # Python dependencies
+└── package.json        # Root project configuration
 ```
 
 ## 🚀 Getting Started
@@ -49,8 +62,10 @@ TheMarketWhisperers/
 ### Prerequisites
 
 - Node.js (v16 or higher)
+- Python 3.x
+- PostgreSQL
 - npm or yarn
-- MongoDB (local or Atlas)
+- pip
 
 ### Installation
 
@@ -60,28 +75,31 @@ git clone https://github.com/yourusername/TheMarketWhisperers.git
 cd TheMarketWhisperers
 ```
 
-2. Install dependencies:
+2. Frontend Setup:
 ```bash
-# Install root dependencies
-npm install
-
-# Install frontend dependencies
 cd frontend
-npm install
-
-# Install backend dependencies
-cd ../backend
 npm install
 ```
 
-3. Environment Setup:
-   - Create a `.env` file in the backend directory with the following variables:
+3. Backend Setup:
+```bash
+cd backend/src
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+4. Environment Setup:
+   - Create a `.env` file in the backend/src directory with the following variables:
    ```
-   PORT=5000
-   MONGODB_URI=your_mongodb_connection_string
+   FLASK_APP=app.py
+   FLASK_ENV=development
+   DATABASE_URL=your_postgresql_connection_string
+   OPENAI_API_KEY=your_openai_api_key
+   SECRET_KEY=your_secret_key
    ```
 
-4. Start the development servers:
+5. Start the development servers:
 
 Frontend (runs on http://localhost:3000):
 ```bash
@@ -91,8 +109,8 @@ npm run dev
 
 Backend (runs on http://localhost:5000):
 ```bash
-cd backend
-npm run dev
+cd backend/src
+flask run
 ```
 
 ## 🔧 Development
@@ -104,10 +122,13 @@ npm run dev
 - Implements React Router for navigation
 
 ### Backend Development
-- RESTful API architecture
-- MongoDB for data storage
-- Express.js for server framework
-- Morgan for request logging
+- RESTful API architecture with Flask
+- PostgreSQL for data storage
+- Flask-Login for authentication
+- yfinance for market data
+- OpenAI integration for market insights
+- pytest for testing
+- pylint for code quality
 
 ## 🤝 Contributing
 
@@ -117,13 +138,14 @@ npm run dev
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-## 📝 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
 ## 👥 Authors
 
-- Your Name - Initial work
+Team Members
+1. Sam Grosser
+2. Ava Sommer
+3. Seung Ju Lee
+4. James Archibald
+5. William Sobczak
 
 ## 🙏 Acknowledgments
 
