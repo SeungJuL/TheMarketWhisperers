@@ -7,6 +7,7 @@ import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 import Navbar from "./components/Navbar";
 import AboutUsPage from "./pages/AboutUsPage";
+import { ChakraProvider, Box, Container } from '@chakra-ui/react'
 
 function App() {
   const [user, setUser] = useState(null);
@@ -50,17 +51,23 @@ function App() {
   }
 
   return (
-    <Router>
-      <Navbar user={user} setUser={setUser} />
-      <Routes>
-        <Route path="/" element={<HomePage user={user} />} />
-        <Route path="/dashboard" element={user ? <DashboardPage /> : <Navigate to="/login" />} />
-        <Route path="/profile" element={user ? <ProfilePage user={user} /> : <Navigate to="/login" />} />
-        <Route path="/login" element={<LoginPage setUser={setUser} />} />
-        <Route path="/signup" element={<SignupPage setUser={setUser} />} />
-        <Route path="/about" element={<AboutUsPage />} />
-      </Routes>
-    </Router>
+    <ChakraProvider>
+      <Router>
+        <Box minH="100vh" bg="gray.50">
+          <Container maxW="container.xl" py={8}>
+            <Navbar user={user} setUser={setUser} />
+            <Routes>
+              <Route path="/" element={<HomePage user={user} />} />
+              <Route path="/dashboard" element={user ? <DashboardPage /> : <Navigate to="/login" />} />
+              <Route path="/profile" element={user ? <ProfilePage user={user} /> : <Navigate to="/login" />} />
+              <Route path="/login" element={<LoginPage setUser={setUser} />} />
+              <Route path="/signup" element={<SignupPage setUser={setUser} />} />
+              <Route path="/about" element={<AboutUsPage />} />
+            </Routes>
+          </Container>
+        </Box>
+      </Router>
+    </ChakraProvider>
   );
 }
 
