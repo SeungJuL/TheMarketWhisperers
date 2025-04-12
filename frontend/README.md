@@ -1,70 +1,144 @@
-# Getting Started with Create React App
+# The Market Whisperers
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A modern full-stack application for market analysis and insights, built with React, Flask, and PostgreSQL.
 
-## Available Scripts
+## 🚀 Features
 
-In the project directory, you can run:
+- Real-time market data analysis using yfinance
+- Interactive data visualization
+- User authentication and authorization
+- Responsive and modern UI with Tailwind CSS
+- RESTful API architecture
+- AI-powered market insights using OpenAI
 
-### `npm start`
+## 🛠️ Tech Stack
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### Frontend
+- React 18
+- Vite
+- Tailwind CSS
+- Chakra UI
+- React Router
+- Axios
+- Framer Motion
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+### Backend
+- Python 3.x
+- Flask
+- Flask-CORS
+- Flask-Login
+- PostgreSQL
+- yfinance
+- OpenAI API
+- pytest (testing)
+- pylint (code quality)
 
-### `npm test`
+## 📁 Project Structure
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+```
+TheMarketWhisperers/
+├── frontend/              # React frontend application
+│   ├── src/              # Source files
+│   │   ├── components/   # React components
+│   │   ├── pages/       # Page components
+│   │   └── App.jsx      # Main application component
+│   ├── public/          # Static assets
+│   └── package.json     # Frontend dependencies
+├── backend/             # Flask backend server
+│   ├── src/            # Source files
+│   │   ├── controllers/ # API controllers
+│   │   ├── models/     # Data models
+│   │   ├── services/   # Business logic
+│   │   ├── tests/      # Test suite
+│   │   ├── dtos/       # Data transfer objects
+│   │   ├── blueprints/ # Flask blueprints
+│   │   └── app.py      # Flask application
+│   └── requirements.txt # Python dependencies
+└── package.json        # Root project configuration
+```
 
-### `npm run build`
+## 🚀 Getting Started
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### Prerequisites
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+- Node.js (v16 or higher)
+- Python 3.x
+- PostgreSQL
+- npm or yarn
+- pip
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### Installation
 
-### `npm run eject`
+1. Clone the repository:
+```bash
+git clone https://github.com/yourusername/TheMarketWhisperers.git
+cd TheMarketWhisperers
+```
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+2. Frontend Setup:
+```bash
+cd frontend
+npm install
+```
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+3. Backend Setup:
+```bash
+cd backend/src
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -r requirements.txt
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+4. Environment Setup:
+   - Create a `.env` file in the backend/src directory with the following variables:
+   ```
+   FLASK_APP=app.py
+   FLASK_ENV=development
+   DATABASE_URL=your_postgresql_connection_string
+   OPENAI_API_KEY=your_openai_api_key
+   SECRET_KEY=your_secret_key
+   ```
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+5. Start the development servers:
 
-## Learn More
+Frontend (runs on http://localhost:3000):
+```bash
+cd frontend
+npm run dev
+```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+Backend (runs on http://localhost:5000):
+```bash
+cd backend/src
+flask run
+```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## 🔧 Development
 
-### Code Splitting
+### Frontend Development
+- Uses Vite for fast development and building
+- Implements Tailwind CSS for styling
+- Uses Chakra UI for component library
+- Implements React Router for navigation
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+### Backend Development
+- RESTful API architecture with Flask
+- PostgreSQL for data storage
+- Flask-Login for authentication
+- yfinance for market data
+- OpenAI integration for market insights
+- pytest for testing
+- pylint for code quality
 
-### Analyzing the Bundle Size
+## 👥 Authors
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+Team Members
+1. Sam Grosser
+2. Ava Sommer
+3. Seung Ju Lee
+4. James Archibald
+5. William Sobczak
 
-### Making a Progressive Web App
+## 🙏 Acknowledgments
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+- Thanks to all contributors who have helped shape this project 
