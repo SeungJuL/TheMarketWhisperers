@@ -1,149 +1,70 @@
-# The Market Whisperers - Frontend
+# Getting Started with Create React App
 
-The frontend application for The Market Whisperers, a modern market analysis platform built with React, Vite, and Tailwind CSS.
+This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
-## 🚀 Features
+## Available Scripts
 
-- Interactive stock market dashboard
-- Real-time stock chart visualization
-- User authentication and profile management
-- Responsive design with mobile-first approach
-- Modern UI with smooth animations
-- Dark/Light mode support
+In the project directory, you can run:
 
-## 🛠️ Tech Stack
+### `npm start`
 
-- React 18
-- Vite (Build Tool)
-- Tailwind CSS (Styling)
-- Chakra UI (Component Library)
-- React Router v6 (Navigation)
-- Axios (HTTP Client)
-- Framer Motion (Animations)
-- Heroicons (Icon Library)
+Runs the app in the development mode.\
+Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
 
-## 📁 Project Structure
+The page will reload when you make changes.\
+You may also see any lint errors in the console.
 
-```
-frontend/
-├── src/
-│   ├── components/         # Reusable UI components
-│   │   ├── Navbar.jsx     # Navigation component
-│   │   ├── StockChart.jsx # Stock visualization
-│   │   ├── StockCard.jsx  # Stock information card
-│   │   └── PageWrapper.jsx# Page layout wrapper
-│   ├── pages/             # Page components
-│   │   ├── HomePage.jsx   # Landing page
-│   │   ├── DashboardPage.jsx # Main dashboard
-│   │   ├── LoginPage.jsx  # User authentication
-│   │   ├── SignupPage.jsx # User registration
-│   │   ├── ProfilePage.jsx# User profile
-│   │   └── AboutUsPage.jsx# About page
-│   ├── App.jsx            # Main application component
-│   ├── main.jsx           # Application entry point
-│   └── index.css          # Global styles
-├── public/                # Static assets
-└── package.json          # Dependencies and scripts
-```
+### `npm test`
 
-## 🚀 Getting Started
+Launches the test runner in the interactive watch mode.\
+See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
 
-### Prerequisites
+### `npm run build`
 
-- Node.js (v16 or higher)
-- npm or yarn
+Builds the app for production to the `build` folder.\
+It correctly bundles React in production mode and optimizes the build for the best performance.
 
-### Installation
+The build is minified and the filenames include the hashes.\
+Your app is ready to be deployed!
 
-1. Navigate to the frontend directory:
-```bash
-cd frontend
-```
+See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
 
-2. Install dependencies:
-```bash
-npm install
-```
+### `npm run eject`
 
-3. Start the development server:
-```bash
-npm run dev
-```
+**Note: this is a one-way operation. Once you `eject`, you can't go back!**
 
-The application will be available at `http://localhost:3000`
+If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
 
-## 🔧 Development
+Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
 
-### Available Scripts
+You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
 
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run preview` - Preview production build
+## Learn More
 
-### Component Architecture
+You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
 
-1. **Pages**
-   - Each page is a self-contained component
-   - Uses React Router for navigation
-   - Implements responsive design
+To learn React, check out the [React documentation](https://reactjs.org/).
 
-2. **Components**
-   - Reusable UI components
-   - Follows atomic design principles
-   - Implements Chakra UI components
+### Code Splitting
 
-3. **Styling**
-   - Tailwind CSS for utility-first styling
-   - Chakra UI for component library
-   - Custom CSS for specific needs
+This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
 
-### State Management
+### Analyzing the Bundle Size
 
-- React Context for global state
-- Local state for component-specific data
-- Axios for API communication
+This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
 
-### Best Practices
+### Making a Progressive Web App
 
-1. **Code Organization**
-   - Components are organized by feature
-   - Reusable components in shared directory
-   - Pages contain page-specific components
+This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
 
-2. **Styling**
-   - Use Tailwind classes for styling
-   - Implement responsive design
-   - Follow mobile-first approach
+### Advanced Configuration
 
-3. **Performance**
-   - Code splitting with React.lazy
-   - Image optimization
-   - Memoization where necessary
+This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
 
-## 🎨 UI/UX Guidelines
+### Deployment
 
-- Follow Material Design principles
-- Implement consistent spacing
-- Use the provided color palette
-- Ensure accessibility standards
-- Support both light and dark modes
+This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
 
-## 🔍 Testing
+### `npm run build` fails to minify
 
-- Component testing with React Testing Library
-- End-to-end testing with Cypress
-- Performance monitoring
-
-## 📦 Build Process
-
-1. Development
-   - Hot module replacement
-   - Source maps
-   - Fast refresh
-
-2. Production
-   - Code minification
-   - Asset optimization
-   - Tree shaking
-
-
+This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
