@@ -1,6 +1,6 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import PageWrapper from '../components/PageWrapper';
+import React from "react";
+import { Link } from "react-router-dom";
+import PageWrapper from "../components/PageWrapper";
 import { useNavigate } from "react-router-dom";
 
 const HomePage = ({ user }) => {
@@ -22,11 +22,10 @@ const HomePage = ({ user }) => {
           className="absolute inset-0 bg-cover bg-center"
           style={{
             backgroundImage: 'url("/backgroundhome.png")',
-            filter: 'brightness(0.5)', // Dim ONLY the background
+            filter: "brightness(0.5)", // Dim ONLY the background
           }}
         />
         <div className="relative z-10 flex flex-col items-center justify-center min-h-screen">
-          
           {/* Hero Section */}
           <div className="max-w-6xl flex items-center justify-center py-8 min-h-[30vh] mt-20 w-full">
             {/* Hero Content */}
@@ -35,7 +34,8 @@ const HomePage = ({ user }) => {
                 Investing Made Simple
               </h1>
               <p className="text-lg md:text-xl text-slate-300 mb-16 max-w-2xl mx-auto">
-                Explore the stock market with an AI-powered guide that keeps it beginner friendly.
+                Explore the stock market with an AI-powered guide that keeps it
+                beginner friendly.
               </p>
 
               {/* CTA Buttons */}
@@ -48,7 +48,7 @@ const HomePage = ({ user }) => {
                 </Link>
                 <Link
                   to="/about"
-                  className="bg-slate-600 hover:bg-blue-700 text-white px-8 py-3 rounded-md font-bold text-lg transition-colors flex items-center justify-center gap-2"
+                  className="bg-slate-600 hover:bg-slate-800 text-white px-8 py-3 rounded-md font-bold text-lg transition-colors flex items-center justify-center gap-2"
                 >
                   About Us
                 </Link>
@@ -60,42 +60,52 @@ const HomePage = ({ user }) => {
           <div className="max-w-6xl mx-auto px-4 py-12">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Feature 1 */}
-              <div className="bg-white/5 backdrop-blur-md rounded-2xl shadow-md p-6 border border-white/20 rounded-lg text-center">
+              <div className="bg-opacity-0 backdrop-blur-lg rounded-2xl shadow-md p-6 border border-white/20 rounded-lg text-center">
                 <div className="text-2xl mb-2">📊</div>
-                <h3 className="text-lg font-semibold mb-2 text-white">Smart Analysis</h3>
+                <h3 className="text-lg font-semibold mb-2 text-white">
+                  Smart Analysis
+                </h3>
                 <p className="text-white text-sm">
-                  Get AI-powered insights and analysis of market trends in plain English.
+                  Get AI-powered insights and analysis of market trends in plain
+                  English.
                 </p>
               </div>
 
               {/* Feature 2 */}
-              <div className="bg-white/5 backdrop-blur-md rounded-2xl shadow-md p-6 border border-white/20 rounded-lg text-center">
+              <div className="bg-opacity-0 backdrop-blur-lg rounded-2xl shadow-md p-6 border border-white/20 rounded-lg text-center">
                 <div className="text-2xl mb-2">🎯</div>
-                <h3 className="text-lg font-semibold mb-2 text-white">Personalized Learning</h3>
+                <h3 className="text-lg font-semibold mb-2 text-white">
+                  Personalized Learning
+                </h3>
                 <p className="text-white text-sm">
-                  Learn at your own pace with customized recommendations and tutorials.
+                  Learn at your own pace with customized recommendations and
+                  tutorials.
                 </p>
               </div>
 
               {/* Feature 3 */}
-              <div className="bg-white/5 backdrop-blur-md rounded-2xl shadow-md p-6 border border-white/20 rounded-lg text-center">
+              <div className="bg-opacity-0 backdrop-blur-lg rounded-2xl shadow-md p-6 border border-white/20 rounded-lg text-center">
                 <div className="text-2xl mb-2">📱</div>
-                <h3 className="text-lg font-semibold mb-2 text-white">Easy Tracking</h3>
+                <h3 className="text-lg font-semibold mb-2 text-white">
+                  Easy Tracking
+                </h3>
                 <p className="text-white text-sm">
-                  Monitor your watchlist and get real-time updates on your investments.
+                  Monitor your watchlist and get real-time updates on your
+                  investments.
                 </p>
               </div>
             </div>
           </div>
 
           {/* Call to Action Section */}
-          <div className="bg-white/5 backdrop-blur-md rounded-2xl shadow-md p-6 border border-white/20 rounded-lg text-center py-12 w-full mt-10">
+          <div className="bg-opacity-0 backdrop-blur-lg rounded-2xl shadow-md p-6 border border-white/20 rounded-lg text-center py-12 w-full mt-10">
             <div className="max-w-4xl mx-auto text-center px-4">
               <h2 className="text-2xl md:text-3xl font-bold mb-4 text-white">
                 Ready to Start Your Investment Journey?
               </h2>
               <p className="text-lg text-slate-300 mb-6">
-                Join thousands of investors who are already using Market Whisperers to make smarter investment decisions.
+                Join thousands of investors who are already using Market
+                Whisperers to make smarter investment decisions.
               </p>
               <button
                 onClick={handleGetStarted}
