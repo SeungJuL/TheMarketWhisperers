@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import PageWrapper from "../components/PageWrapper";
 
-const LoginPage = () => {
+const LoginPage = ({ setUser }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
@@ -21,12 +21,30 @@ const LoginPage = () => {
         body: JSON.stringify({ email, password }),
       });
       const data = await response.json();
-      console.log("API Response:", data);
+      console.log("API Response Data:", data); // Debugging
 
       if (data.success) {
-        localStorage.setItem("token", data.token);
-        setMessage("Login Successful! Redirecting...");
-        setTimeout(() => navigate("/"), 2000);
+        const token = data.data?.token; // Safely access token
+        console.log("Token from API Response:", token); // Debugging
+        if (token) {
+          localStorage.setItem("token", token); // Store token in localStorage
+
+          // Fetch user profile after login
+          const profileResponse = await fetch("http://127.0.0.1:8080/user/profile", {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const profileData = await profileResponse.json();
+
+          if (profileData.success) {
+            setUser(profileData.data); // Update user state with profile data
+            setMessage("Login Successful! Redirecting...");
+            setTimeout(() => navigate("/dashboard"), 2000);
+          } else {
+            setError("Failed to fetch user profile.");
+          }
+        } else {
+          setError("Token is missing in the response.");
+        }
       } else {
         setError(`Login failed! ${data.message}`);
       }
@@ -59,7 +77,6 @@ const LoginPage = () => {
               <p className="text-green-500 mb-4 text-center">{message}</p>
             )}
             {error && <p className="text-red-500 mb-4 text-center">{error}</p>}
-
             <form onSubmit={handleLogin} className="space-y-5">
               {/* Email Field + Icon */}
               <div className="relative">
@@ -100,6 +117,7 @@ const LoginPage = () => {
                         8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"
                     />
                   </svg>
+
                 </div>
               </div>
 
