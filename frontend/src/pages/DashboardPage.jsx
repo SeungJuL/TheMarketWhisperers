@@ -3,19 +3,22 @@ import PageWrapper from "../components/PageWrapper";
 import StockChart from "../components/StockChart";
 
 const DashboardPage = () => {
+  // ========== 1) UI State ==========
   const [activeTab, setActiveTab] = useState("AI Insights");
   const [searchQuery, setSearchQuery] = useState("");
+  const [stockData, setStockData] = useState(null); // When null, show only the search view
+  const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
 
-  // Toggles for right column sections
+  // Toggles for sections (only visible in full dashboard view)
   const [showMetrics, setShowMetrics] = useState(true);
   const [showChart, setShowChart] = useState(true);
   const [showTabs, setShowTabs] = useState(true);
 
-  // Draggable left column state
-  const [leftWidth, setLeftWidth] = useState(30); // e.g., 30% width
+  // ========== 2) Draggable left column (Chat) state ==========
+  const [leftWidth, setLeftWidth] = useState(30); // default 30% width for left column
   const dividerRef = useRef(null);
 
-  // Mouse event handlers for the draggable divider
   const handleMouseDown = (e) => {
     e.preventDefault();
     document.addEventListener("mousemove", handleMouseMove);
@@ -34,45 +37,113 @@ const DashboardPage = () => {
     document.removeEventListener("mouseup", handleMouseUp);
   };
 
-  // Example stock data
-  const stockData = {
-    name: "Apple Inc.",
-    symbol: "AAPL",
-    price: "222.46",
-    change: "-0.60",
-    metrics: {
-      weekHighLow: "166.00 / 260.10",
-      eps: "6.06",
-      revenueGrowth: "2.02%",
-      marketCap: "3.345T",
-      volume: "40,521,968",
-      avgVolume: "47,734,813",
-      dividendYield: "0.45%",
-      beta: "1.24",
-      debtToEquity: "1.51",
-      peRatio: "36.59",
-    },
+  // ========== 3) Backend Fetch Logic ==========
+  const parseDate = (dateStr) => {
+    const cleanedDateStr = dateStr.replace(/^[A-Za-z]{3},\s/, "");
+    const dateObj = new Date(cleanedDateStr);
+    if (isNaN(dateObj.getTime())) {
+      console.error(`Invalid date: ${dateStr}`);
+      return null;
+    }
+    return dateObj;
   };
 
-  // Small component for each metric tile
-  const MetricCard = ({ label, value, tooltip }) => (
-    <div className="bg-slate-950 p-4 rounded-lg relative group shadow-sm">
-      <div className="flex items-center mb-2">
-        <span className="text-gray-300 text-sm">{label}</span>
-        {tooltip && (
-          <div className="ml-2">
-            <span className="text-gray-400 cursor-help">ⓘ</span>
-            <div className="absolute hidden group-hover:block bg-[#0B1120] text-white p-2 rounded-md text-xs z-10 w-48 shadow-lg">
-              {tooltip}
-            </div>
-          </div>
-        )}
-      </div>
-      <div className="text-white font-semibold">{value}</div>
-    </div>
-  );
+  const getStockData = async (stockName) => {
+    setMessage("");
+    setError("");
+    try {
+      const searchRes = await fetch(
+        "http://localhost:8080/stock/search?stock_name=" + stockName
+      );
+      const stocks = await searchRes.json();
+      if (!stocks.success || !stocks.data || !stocks.data[0]) {
+        setError(`Fetch stock failed! ${stocks.message || ""}`);
+        return null;
+      }
 
-  // Material-style toggle switch
+      const symbol = stocks.data[0]["1. symbol"];
+      // Fetch price
+      const priceRes = await fetch(
+        `http://localhost:8080/stock/${symbol}/price?asset_symbol=${symbol}`
+      );
+      const priceJson = await priceRes.json();
+
+      // Fetch stock info
+      const infoRes = await fetch(`http://localhost:8080/stock/${symbol}/info`);
+      const infoJson = await infoRes.json();
+
+      // Fetch historical data
+      const histRes = await fetch(
+        `http://localhost:8080/stock/${symbol}/history`
+      );
+      const histJson = await histRes.json();
+
+      // Build chart arrays
+      const rawDates = histJson.data.map((item) => item.Date);
+      const chartLabels = [];
+      const chartClose = [];
+      const chartHighs = [];
+      const chartLows = [];
+
+      for (let i = 0; i < rawDates.length - 1; i++) {
+        const dateObj = parseDate(rawDates[i]);
+        if (!dateObj) continue;
+        const formattedDate = new Intl.DateTimeFormat("en-US", {
+          month: "short",
+          day: "2-digit",
+          timeZone: "UTC",
+        }).format(dateObj);
+        chartLabels.push(formattedDate);
+        chartClose.push(histJson.data[i]["Close"]);
+        chartHighs.push(histJson.data[i]["High"]);
+        chartLows.push(histJson.data[i]["Low"]);
+      }
+
+      const latestClose = histJson.data[histJson.data.length - 2]["Close"] || 0;
+      const currentPrice = priceJson.data["price"];
+      const calcChange = ((currentPrice - latestClose) / latestClose) * 100;
+      const formattedMarketCap = new Intl.NumberFormat("en-US", {
+        notation: "compact",
+        compactDisplay: "short",
+      }).format(infoJson.data["market_cap"]);
+
+      const finalData = {
+        name: stocks.data[0]["2. name"],
+        symbol,
+        price: currentPrice,
+        change: calcChange,
+        chartLabels,
+        chartClose,
+        chartHighs,
+        chartLows,
+        metrics: {
+          weekHighLow:
+            parseFloat(infoJson.data["52_week_high"]).toFixed(2) +
+            " / " +
+            parseFloat(infoJson.data["52_week_low"]).toFixed(2),
+          eps: infoJson.data["eps"],
+          revenueGrowth:
+            (infoJson.data["revenue_growth"] * 100).toFixed(2) + "%",
+          marketCap: formattedMarketCap,
+          volume: infoJson.data["volume"],
+          avgVolume: infoJson.data["average_volume"],
+          dividendYield: infoJson.data["dividend_yield"] || 0,
+          beta: infoJson.data["beta"],
+          debtToEquity: infoJson.data["debt_to_equity"],
+          peRatio: infoJson.data["pe_ratio"],
+        },
+      };
+
+      setMessage("Stock fetched successfully!");
+      return finalData;
+    } catch (err) {
+      console.error(err);
+      setError("Failed to connect to server");
+      return null;
+    }
+  };
+
+  // ========== 4) MaterialToggle and MetricCard components ==========
   const MaterialToggle = ({ label, checked, onChange }) => {
     return (
       <label className="flex items-center space-x-2 text-slate-300 text-sm">
@@ -90,6 +161,51 @@ const DashboardPage = () => {
     );
   };
 
+  const MetricCard = ({ label, value, tooltip }) => (
+    <div className="bg-slate-950 p-4 rounded-lg relative group shadow-sm">
+      <div className="flex items-center mb-2">
+        <span className="text-gray-300 text-sm">{label}</span>
+        {tooltip && (
+          <div className="ml-2">
+            <span className="text-gray-400 cursor-help">ⓘ</span>
+            <div className="absolute hidden group-hover:block bg-[#0B1120] text-white p-2 rounded-md text-xs z-10 w-48 shadow-lg">
+              {tooltip}
+            </div>
+          </div>
+        )}
+      </div>
+      <div className="text-white font-semibold">{value}</div>
+    </div>
+  );
+
+  // ========== 5) Render: if no stockData, then show only the centered search component ==========
+  if (!stockData) {
+    return (
+      <PageWrapper>
+        <div className="h-screen flex flex-col items-center justify-center">
+          <h1 className="text-white text-2xl mb-4">Search for a Stock</h1>
+          <input
+            type="text"
+            textAlign="center"
+            style={{ width: "300px", height: "50px", fontSize: "18px" }}
+            className="w-full bg-slate-950 text-white px-4 py-2 border border-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded text-sm"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyUp={async (evt) => {
+              if (evt.key === "Enter") {
+                const data = await getStockData(searchQuery);
+                if (data) setStockData(data);
+              }
+            }}
+          />
+          {error && <p className="mt-2 text-red-500 text-sm">{error}</p>}
+          {message && <p className="mt-2 text-green-500 text-sm">{message}</p>}
+        </div>
+      </PageWrapper>
+    );
+  }
+
+  // ========== 6) Render full dashboard (when stockData exists) ==========
   return (
     <PageWrapper>
       <div className="pt-28"></div>
@@ -119,7 +235,7 @@ const DashboardPage = () => {
                 I help you today?
               </p>
             </div>
-            {/* Chat input at bottom */}
+            {/* Chat input */}
             <div className="flex items-center space-x-2">
               <input
                 type="text"
@@ -145,7 +261,7 @@ const DashboardPage = () => {
           className="flex flex-col h-full overflow-auto space-y-4 p-2 md:p-8"
           style={{ width: `${100 - leftWidth}%` }}
         >
-          {/* Search Bar row (with "Show Tabs" to the right) */}
+          {/* Row: search bar & toggles */}
           <div className="bg-slate-950 rounded-xl p-4 shadow-md flex items-center justify-between">
             {/* Left side: Search input */}
             <input
@@ -154,27 +270,30 @@ const DashboardPage = () => {
               className="flex-1 max-w-md bg-slate-900 text-white px-4 py-2 border border-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded mr-4"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyUp={async (evt) => {
+                if (evt.key === "Enter") {
+                  const data = await getStockData(searchQuery);
+                  if (data) setStockData(data);
+                }
+              }}
             />
-
-            {/* Right side: "Show Tabs" toggle */}
+            {/* Right side: toggles */}
             <div className="flex gap-4 items-center">
               <MaterialToggle
                 label="Show Tabs"
                 checked={showTabs}
                 onChange={() => setShowTabs((prev) => !prev)}
               />
-              {/* Additional toggles for "Metrics" & "Chart" in a new row */}
               <MaterialToggle
                 label="Metrics"
                 checked={showMetrics}
-                onChange={() => setShowMetrics(!showMetrics)}
+                onChange={() => setShowMetrics((prev) => !prev)}
               />
               <MaterialToggle
                 label="Chart"
                 checked={showChart}
-                onChange={() => setShowChart(!showChart)}
+                onChange={() => setShowChart((prev) => !prev)}
               />
-              {/* Could add more toggles here if needed */}
             </div>
           </div>
 
@@ -185,93 +304,84 @@ const DashboardPage = () => {
             </h1>
             <div className="flex items-center space-x-2">
               <span className="text-xl md:text-xl text-blue-400">
-                ${stockData.price}
+                ${parseFloat(stockData.price).toFixed(2)}
               </span>
-              <span className="text-red-500">({stockData.change}%)</span>
+              <span
+                className={
+                  stockData.change >= 0 ? "text-green-500" : "text-red-500"
+                }
+              >
+                ({parseFloat(stockData.change).toFixed(2)}%)
+              </span>
             </div>
           </div>
 
           {/* Metrics Grid */}
           {showMetrics && (
-            <div className="bg-slate-950 rounded-xl p-3 shadow-md">
-              <div className="grid grid-cols-4 md:grid-cols-3 gap-1">
+            <div className="bg-slate-950 rounded-xl p-4 shadow-md">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <MetricCard
-                  label="52 Week High/Low"
+                  label="52 Wk High/Low"
                   value={stockData.metrics.weekHighLow}
-                  tooltip="The highest and lowest stock price over the past 52 weeks"
+                  tooltip="Highest/lowest stock price over the past 52 weeks"
                 />
                 <MetricCard
                   label="Earnings Per Share"
                   value={stockData.metrics.eps}
-                  tooltip="Company's profit divided by outstanding shares"
+                  tooltip="Profit / outstanding shares"
                 />
                 <MetricCard
                   label="Revenue Growth"
                   value={stockData.metrics.revenueGrowth}
-                  tooltip="Year-over-year revenue growth percentage"
+                  tooltip="Year-over-year revenue growth"
                 />
                 <MetricCard
                   label="Market Cap"
                   value={stockData.metrics.marketCap}
-                  tooltip="Total market value of company's outstanding shares"
+                  tooltip="Total market value of outstanding shares"
                 />
                 <MetricCard
                   label="Volume/Average Volume"
-                  value={`${stockData.metrics.volume} / ${stockData.metrics.avgVolume}`}
-                  tooltip="Today's trading volume vs. 3-month average"
+                  value={`${Number(
+                    stockData.metrics.volume
+                  ).toLocaleString()} / ${Number(
+                    stockData.metrics.avgVolume
+                  ).toLocaleString()}`}
+                  tooltip="Today's volume vs. 3-month average"
                 />
                 <MetricCard
                   label="Dividend Yield"
                   value={stockData.metrics.dividendYield}
-                  tooltip="Annual dividend payments relative to stock price"
+                  tooltip="Annual dividend payments / stock price"
                 />
                 <MetricCard
                   label="Beta"
-                  value={stockData.metrics.beta}
-                  tooltip="Stock's volatility compared to the market"
+                  value={parseFloat(stockData.metrics.beta).toFixed(2)}
+                  tooltip="Volatility measure vs. market"
                 />
                 <MetricCard
                   label="Debt-to-Equity"
-                  value={stockData.metrics.debtToEquity}
-                  tooltip="Total liabilities divided by shareholder equity"
+                  value={parseFloat(stockData.metrics.debtToEquity).toFixed(2)}
+                  tooltip="Liabilities / equity ratio"
                 />
                 <MetricCard
                   label="P/E Ratio"
-                  value={stockData.metrics.peRatio}
-                  tooltip="Stock price relative to earnings per share"
+                  value={parseFloat(stockData.metrics.peRatio).toFixed(2)}
+                  tooltip="Price relative to earnings"
                 />
               </div>
             </div>
           )}
 
           {/* Chart */}
-          {showChart && (
+          {showChart && stockData && (
             <div className="bg-slate-950 rounded-xl p-4 shadow-md">
               <StockChart
                 historicalInfo={{
-                  chartLabels: [
-                    "Jan",
-                    "Feb",
-                    "Mar",
-                    "Apr",
-                    "May",
-                    "Jun",
-                    "Jul",
-                    "Aug",
-                    "Sep",
-                    "Oct",
-                    "Nov",
-                    "Dec",
-                  ],
-                  chartClose: [
-                    150, 158, 162, 160, 165, 170, 172, 175, 178, 182, 180, 185,
-                  ],
-                  chartHighs: [
-                    153, 160, 165, 163, 168, 173, 175, 178, 182, 185, 183, 189,
-                  ],
-                  chartLows: [
-                    148, 155, 159, 157, 161, 167, 169, 173, 175, 179, 177, 182,
-                  ],
+                  chartLabels: stockData.chartLabels,
+                  chartClose: stockData.chartClose,
+                  chartHighs: stockData.chartHighs,
+                  chartLows: stockData.chartLows,
                 }}
               />
             </div>
@@ -319,7 +429,7 @@ const DashboardPage = () => {
                 )}
                 {activeTab === "Technicals" && (
                   <p>
-                    Technical analysis involves looking at price trends and
+                    Technical analysis involves analyzing price trends and
                     volume...
                   </p>
                 )}
