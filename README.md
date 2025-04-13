@@ -92,11 +92,13 @@ pip install -r requirements.txt
 4. Environment Setup:
    - Create a `.env` file in the backend/src directory with the following variables:
    ```
-   FLASK_APP=app.py
-   FLASK_ENV=development
-   DATABASE_URL=your_postgresql_connection_string
-   OPENAI_API_KEY=your_openai_api_key
-   SECRET_KEY=your_secret_key
+   PSQL_DB='your_db_name'
+   PSQL_HOST='your_db_host_name'
+   PSQL_USER='your_db_user_name'
+   PSQL_PWD='your_db_password'
+   SESSION_SECRET_KEY='your_session_secret_key'
+   STOCK_API_KEY='your_alphavantage_api_key'
+   GPT_API_KEY='your_openai_api_key'
    ```
 
 5. Start the development servers:
@@ -104,13 +106,13 @@ pip install -r requirements.txt
 Frontend (runs on http://localhost:3000):
 ```bash
 cd frontend
-npm run dev
+npm start
 ```
 
 Backend (runs on http://localhost:8080):
 ```bash
 cd backend/src
-flask run
+python app.py
 ```
 
 ## 🔧 Development
@@ -123,12 +125,11 @@ flask run
 
 ### Backend Development
 - RESTful API architecture with Flask
-- PostgreSQL for data storage
+- PostgreSQL for data storage (Using AWS RDS)
 - Flask-Login for authentication
 - yfinance for market data
-- OpenAI integration for market insights
+- OpenAI integration for market insights and chat service
 - pytest for testing
-- pylint for code quality
 
 ## 👥 Authors
 
