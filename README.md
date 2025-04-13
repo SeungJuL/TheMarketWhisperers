@@ -90,16 +90,16 @@ pip install -r requirements.txt
 ```
 
 4. Environment Setup:
-   - Create a `.env` file in the backend/src directory with the following variables:
-   ```
-   PSQL_DB='your_db_name'
-   PSQL_HOST='your_db_host_name'
-   PSQL_USER='your_db_user_name'
-   PSQL_PWD='your_db_password'
-   SESSION_SECRET_KEY='your_session_secret_key'
-   STOCK_API_KEY='your_alphavantage_api_key'
-   GPT_API_KEY='your_openai_api_key'
-   ```
+- Create a `.env` file in the backend/src directory with the following variables:
+```
+PSQL_DB='your_db_name'
+PSQL_HOST='your_db_host_name'
+PSQL_USER='your_db_user_name'
+PSQL_PWD='your_db_password'
+SESSION_SECRET_KEY='your_session_secret_key'
+STOCK_API_KEY='your_alphavantage_api_key'
+GPT_API_KEY='your_openai_api_key'
+```
 
 5. Start the development servers:
 
