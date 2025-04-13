@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
+import { useLocation } from "react-router-dom";
 import PageWrapper from '../components/PageWrapper';
 import StockChart from "../components/StockChart";
 
 const DashboardPage = () => {
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState('AI Insights');
   const [searchQuery, setSearchQuery] = useState('');
   const [stockData, setStockData] = useState(null); // Updated to store stock data
@@ -15,6 +17,15 @@ const DashboardPage = () => {
       fetchWatchlistStatus(stockData.symbol);
     }
   }, [stockData]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const stock = params.get("stock");
+    if (stock) {
+      setSearchQuery(stock);
+      getStockData(stock).then((val) => { setStockData(val) });
+    }
+  }, [location]);
 
   const fetchWatchlistStatus = async (stockSymbol) => {
     try {

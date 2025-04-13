@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
 import PageWrapper from '../components/PageWrapper';
+import { useNavigate } from "react-router-dom"; // Add this import
 
 const ProfilePage = ({ user }) => {
+  const navigate = useNavigate(); // Initialize the navigate function
   const [activeTab, setActiveTab] = useState('profile');
   const [isEditing, setIsEditing] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
@@ -212,7 +214,11 @@ const ProfilePage = ({ user }) => {
     });
   };
 
-    return (
+  const handleWatchlistItemClick = (assetSymbol) => {
+    navigate(`/dashboard?stock=${assetSymbol}`); // Redirect to the dashboard with the stock name as a query parameter
+  };
+
+  return (
     <PageWrapper>
       <div className="flex flex-col min-h-screen">
         <div className="max-w-6xl mx-auto px-4 w-full mt-28">
@@ -375,14 +381,18 @@ const ProfilePage = ({ user }) => {
                   {watchlist.map((item) => (
                     <div
                       key={item.asset_symbol}
-                      className="bg-slate-600 p-4 rounded-lg flex justify-between items-center"
+                      className="bg-slate-600 p-4 rounded-lg flex justify-between items-center cursor-pointer hover:bg-slate-500"
+                      onClick={() => handleWatchlistItemClick(item.asset_symbol)} // Add click handler
                     >
                       <div>
                         <h3 className="font-semibold">{item.name}</h3>
                         <p className="text-sm text-slate-300">{item.asset_symbol}</p>
                       </div>
                       <button
-                        onClick={() => handleRemoveFromWatchlist(item.asset_symbol)}
+                        onClick={(e) => {
+                          e.stopPropagation(); // Prevent triggering the parent click event
+                          handleRemoveFromWatchlist(item.asset_symbol);
+                        }}
                         className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium"
                       >
                         Remove
@@ -541,7 +551,7 @@ const ProfilePage = ({ user }) => {
         </div>
       </div>
     </PageWrapper>
-    );
-  };
-  
-  export default ProfilePage;
+  );
+};
+
+export default ProfilePage;
