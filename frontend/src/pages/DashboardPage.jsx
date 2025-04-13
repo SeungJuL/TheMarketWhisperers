@@ -1,20 +1,75 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { EyeIcon, HomeIcon, UserCircleIcon } from '@heroicons/react/24/outline';
+import React, { useEffect, useState } from 'react';
 import PageWrapper from '../components/PageWrapper';
-import Navbar from '../components/Navbar';
 import StockChart from "../components/StockChart";
 
-
 const DashboardPage = () => {
-  const chartContainerRef = useRef(null);
   const [activeTab, setActiveTab] = useState('AI Insights');
   const [searchQuery, setSearchQuery] = useState('');
-  const [stockName, setStockName] = useState('');
-  const [message, setMessage] = useState(""); // ✅ Success message state
-  const [error, setError] = useState(""); // ✅ Error message state
-  const [stockData, setStockData] = useState('');
+  const [stockData, setStockData] = useState(null); // Updated to store stock data
   const [isVisible, setIsVisible] = useState(false);
-  
+  const [isInWatchlist, setIsInWatchlist] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (stockData?.symbol) {
+      fetchWatchlistStatus(stockData.symbol);
+    }
+  }, [stockData]);
+
+  const fetchWatchlistStatus = async (stockSymbol) => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch("http://127.0.0.1:8080/watchlist", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await response.json();
+      if (data.success) {
+        const isStockInWatchlist = data.data.some(
+          (item) => item.asset_symbol === stockSymbol
+        );
+        setIsInWatchlist(isStockInWatchlist);
+      } else {
+        setError(data.message || "Failed to fetch watchlist");
+      }
+    } catch (error) {
+      console.error("Fetch Watchlist Error:", error);
+      setError("Failed to connect to the server");
+    }
+  };
+
+  const toggleWatchlist = async () => {
+    if (!stockData?.symbol) {
+      setError("No stock selected to add to watchlist");
+      return;
+    }
+
+    setError("");
+    try {
+      const token = localStorage.getItem("token");
+      const url = "http://127.0.0.1:8080/watchlist";
+      const method = isInWatchlist ? "DELETE" : "POST";
+      const body = JSON.stringify({ asset_symbol: stockData.symbol, name: stockData.symbol });
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body,
+      });
+      const data = await response.json();
+      if (data.success) {
+        setIsInWatchlist(!isInWatchlist);
+      } else {
+        setError(data.message || "Failed to update watchlist");
+      }
+    } catch (error) {
+      console.error("Toggle Watchlist Error:", error);
+      setError("Failed to connect to the server");
+    }
+  };
+
   // Function to clean and parse dates
   const parseDate = (dateStr) => {
     // Strip out the weekday name (e.g., 'Thu,' or 'Mon,')
@@ -36,7 +91,6 @@ const DashboardPage = () => {
 
   const getStockData = async (stockName) => {
 
-    setMessage("");  // Clear messages before a new attempt
     setError("");
 
     try {
@@ -198,7 +252,18 @@ const DashboardPage = () => {
                     <span className={stockData.change >= 0 ? "text-green-500" : "text-red-500"}>({parseFloat(stockData.change).toFixed(2)}%)</span>
                   </div>
                 </div>
-                <button className="text-yellow-500">★</button>
+                <div className="relative">
+                  <button
+                    onClick={toggleWatchlist}
+                    className="absolute top-0 right-0 p-2"
+                    title={isInWatchlist ? "Remove from Watchlist" : "Add to Watchlist"}
+                  >
+                    <i
+                      className={`fa${isInWatchlist ? "s" : "r"} fa-star text-yellow-500 text-2xl`}
+                    ></i>
+                  </button>
+                </div>
+                {error && <div className="text-red-500">{error}</div>}
               </div>}
 
             {/* Metrics Grid */}
@@ -318,4 +383,4 @@ const DashboardPage = () => {
   );
 };
 
-export default DashboardPage; 
+export default DashboardPage;
