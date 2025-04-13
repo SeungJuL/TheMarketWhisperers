@@ -139,10 +139,10 @@ class UserController:
     def update_profile_picture(self):
         try:
             # Check if file exists in request
-            if 'profilePicture' not in request.files:
+            if 'profile_picture' not in request.files:
                 return ResponseUtil.failure('No file provided', None), 400
 
-            file = request.files['profilePicture']
+            file = request.files['profile_picture']
             
             # Check if file is selected
             if file.filename == '':
@@ -167,7 +167,7 @@ class UserController:
             if not success:
                 return ResponseUtil.error('Failed to update profile picture', None), 500
 
-            return ResponseUtil.success('Profile picture updated successfully', {'filePath': file_path}), 200
+            return ResponseUtil.success('Profile picture updated successfully', {'file_path': file_path}), 200
 
         except Exception as e:
             return ResponseUtil.error('An error occurred while updating profile picture', str(e)), 500
