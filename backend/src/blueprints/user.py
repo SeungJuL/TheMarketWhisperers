@@ -15,5 +15,20 @@ def login():
 
 @user_blueprint.route('/profile', methods=['GET'])
 @login_required
-def profile():
-    return user_controller.profile()
+def get_profile():
+    return user_controller.get_profile()
+
+@user_blueprint.route('/profile', methods=['PUT'])
+@login_required
+def update_profile():
+    return user_controller.update_profile(request.get_json())
+
+@user_blueprint.route('/profile/picture', methods=['PUT'])
+@login_required
+def update_profile_picture():
+    return user_controller.update_profile_picture()
+
+@user_blueprint.route('/password', methods=['PUT'])
+@login_required
+def update_password():
+    return user_controller.change_password(request.get_json())

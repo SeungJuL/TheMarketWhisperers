@@ -3,7 +3,11 @@ CREATE TABLE users (
     email VARCHAR(255),
     password_hash VARCHAR(255),
     username VARCHAR(100),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    profile_picture_path VARCHAR(255),
+    bio TEXT,
+    phone_number VARCHAR(20),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE watchlists (
