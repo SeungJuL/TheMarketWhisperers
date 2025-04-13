@@ -1,9 +1,13 @@
 CREATE TABLE users (
     user_id BIGSERIAL PRIMARY KEY,
-    email VARCHAR(255),
-    password_hash VARCHAR(255),
-    username VARCHAR(100),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    email VARCHAR(255) NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    username VARCHAR(100) NOT NULL,
+    profile_picture_path VARCHAR(255),
+    bio TEXT,
+    phone_number VARCHAR(20),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE watchlists (
