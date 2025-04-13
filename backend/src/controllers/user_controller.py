@@ -90,26 +90,6 @@ class UserController:
         except Exception as e:
             return ResponseUtil.error('An error occurred during login', str(e)), 500
 
-    def change_password(self, data):
-        try:
-            current_password = data.get('currentPassword')
-            new_password = data.get('newPassword')
-
-            if not current_password or not new_password:
-                return ResponseUtil.failure('Please provide both current and new password', None), 400
-
-            if not check_password_hash(current_user.user_password, current_password):
-                return ResponseUtil.failure('Current password is incorrect', None), 401
-
-            hashed_password = generate_password_hash(new_password)
-            if(self.user_model.update_password(current_user.id, hashed_password)):
-                return ResponseUtil.success('Password updated successfully', None), 200
-            else:
-                return ResponseUtil.error('Failed to update password', None), 500
-            
-        except Exception as e:
-            return ResponseUtil.error('An error occurred while updating password', str(e)), 500
-
     def get_profile(self):
         try:
             user_info = self.user_model.find_by_id(current_user.id)
@@ -119,9 +99,9 @@ class UserController:
             profile_data = {
                 'email': user_info[1],
                 'username': user_info[3],
-                'profile_picture_path': user_info[4],
-                'bio': user_info[5],
-                'phone_number': user_info[6]
+                'profile_picture_path': user_info[5],
+                'bio': user_info[6],
+                'phone_number': user_info[7]
             }
 
             return ResponseUtil.success('Profile retrieved successfully', profile_data), 200
@@ -191,5 +171,25 @@ class UserController:
 
         except Exception as e:
             return ResponseUtil.error('An error occurred while updating profile picture', str(e)), 500
+
+    def change_password(self, data):
+        try:
+            current_password = data.get('current_password')
+            new_password = data.get('new_password')
+
+            if not current_password or not new_password:
+                return ResponseUtil.failure('Please provide both current and new password', None), 400
+
+            if not check_password_hash(current_user.user_password, current_password):
+                return ResponseUtil.failure('Current password is incorrect', None), 401
+
+            hashed_password = generate_password_hash(new_password)
+            if(self.user_model.update_password(current_user.id, hashed_password)):
+                return ResponseUtil.success('Password updated successfully', None), 200
+            else:
+                return ResponseUtil.error('Failed to update password', None), 500
+            
+        except Exception as e:
+            return ResponseUtil.error('An error occurred while updating password', str(e)), 500
 
         
