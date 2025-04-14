@@ -30,11 +30,27 @@ const DashboardPage = () => {
 
   const fetchWatchlistStatus = async (stockSymbol) => {
     try {
-      const watchlistData = await fetchWatchlist(); // Reuse fetchWatchlist utility
-      const isStockInWatchlist = watchlistData.some(
-        (item) => item.asset_symbol === stockSymbol
-      );
-      setIsInWatchlist(isStockInWatchlist);
+      const response = await fetch("/watchlist", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch watchlist");
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        const isStockInWatchlist = data.data.some(
+          (item) => item.asset_symbol === stockSymbol
+        );
+        setIsInWatchlist(isStockInWatchlist);
+      } else {
+        throw new Error(data.message || "Failed to fetch watchlist");
+      }
     } catch (error) {
       console.error("Fetch Watchlist Error:", error);
       setError("Failed to fetch watchlist");
@@ -59,7 +75,7 @@ const DashboardPage = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        credentials: "include", // Ensure cookies are sent with the request
+        credentials: "include",
         body: JSON.stringify(body),
       });
 

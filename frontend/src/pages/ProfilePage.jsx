@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import PageWrapper from '../components/PageWrapper';
 import { useNavigate } from "react-router-dom"; // Add this import
-import { fetchWatchlist } from "../utils/userUtils";
 
 const ProfilePage = ({ user }) => {
   const navigate = useNavigate(); // Initialize the navigate function
@@ -37,8 +36,24 @@ const ProfilePage = ({ user }) => {
     setMessage("");
     setError("");
     try {
-      const watchlistData = await fetchWatchlist();
-      setWatchlist(watchlistData);
+      const response = await fetch("/watchlist", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch watchlist");
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        setWatchlist(data.data);
+      } else {
+        throw new Error(data.message || "Failed to fetch watchlist");
+      }
     } catch (error) {
       setError("Failed to fetch watchlist");
     }
