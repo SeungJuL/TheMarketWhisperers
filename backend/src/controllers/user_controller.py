@@ -85,6 +85,8 @@ class UserController:
 
             # Log in user
             login_user(user_instance)
+
+            # Ensure session cookie is set
             return ResponseUtil.success('Login success', {"email": user[1]}), 201
 
         except Exception as e:

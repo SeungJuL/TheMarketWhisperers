@@ -20,7 +20,7 @@ const LoginPage = ({ setUser }) => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
-        credentials: "include",
+        credentials: "include", // Ensure cookies are sent with the request
       });
 
       if (response.ok) {

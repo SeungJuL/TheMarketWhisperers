@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useLocation } from "react-router-dom";
 import PageWrapper from '../components/PageWrapper';
 import StockChart from "../components/StockChart";
+import { fetchWatchlist } from "../utils/userUtils"; // Import fetchWatchlist
 
 const DashboardPage = () => {
   const location = useLocation();
@@ -29,22 +30,14 @@ const DashboardPage = () => {
 
   const fetchWatchlistStatus = async (stockSymbol) => {
     try {
-      const token = localStorage.getItem("token");
-      const response = await fetch("http://127.0.0.1:8080/watchlist", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await response.json();
-      if (data.success) {
-        const isStockInWatchlist = data.data.some(
-          (item) => item.asset_symbol === stockSymbol
-        );
-        setIsInWatchlist(isStockInWatchlist);
-      } else {
-        setError(data.message || "Failed to fetch watchlist");
-      }
+      const watchlistData = await fetchWatchlist(); // Reuse fetchWatchlist utility
+      const isStockInWatchlist = watchlistData.some(
+        (item) => item.asset_symbol === stockSymbol
+      );
+      setIsInWatchlist(isStockInWatchlist);
     } catch (error) {
       console.error("Fetch Watchlist Error:", error);
-      setError("Failed to connect to the server");
+      setError("Failed to fetch watchlist");
     }
   };
 
@@ -56,19 +49,20 @@ const DashboardPage = () => {
 
     setError("");
     try {
-      const token = localStorage.getItem("token");
-      const url = "http://127.0.0.1:8080/watchlist";
       const method = isInWatchlist ? "DELETE" : "POST";
-      const body = JSON.stringify({ asset_symbol: stockData.symbol, name: stockData.symbol });
+      const body = isInWatchlist
+        ? { asset_symbol: stockData.symbol }
+        : { asset_symbol: stockData.symbol, name: stockData.name };
 
-      const response = await fetch(url, {
+      const response = await fetch("/watchlist", {
         method,
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
-        body,
+        credentials: "include", // Ensure cookies are sent with the request
+        body: JSON.stringify(body),
       });
+
       const data = await response.json();
       if (data.success) {
         setIsInWatchlist(!isInWatchlist);
