@@ -14,10 +14,10 @@ def get_watchlist():
 @login_required
 def add_to_watchlist():
     data = request.get_json()
-    return watchlist_controller.add_to_watchlist(current_user.id, data)
+    return watchlist_controller.add_to_watchlist(data)  # Pass only `data`
 
 @watchlist_blueprint.route('/', methods=['DELETE'])
 @login_required
 def remove_from_watchlist():
     data = request.get_json()
-    return watchlist_controller.remove_from_watchlist(current_user.id, data)
+    return watchlist_controller.remove_from_watchlist(data)  # Pass only `data`

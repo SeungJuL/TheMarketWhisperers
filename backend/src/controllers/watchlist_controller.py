@@ -17,7 +17,7 @@ class WatchlistController:
 
     def add_to_watchlist(self, data):
         try:
-            user_id = current_user.id
+            user_id = current_user.id  # Retrieve user ID here
             asset_symbol = data.get('asset_symbol')
             name = data.get('name')
             # if asset symbol or name is not given
@@ -33,11 +33,11 @@ class WatchlistController:
 
     def remove_from_watchlist(self, data):
         try:
-            user_id = current_user.id
+            user_id = current_user.id  # Retrieve user ID here
             asset_symbol = data.get('asset_symbol')
             # if symbol is not given
             if not asset_symbol:
-                return ResponseUtil.failure('Asset symbol are required', None), 400
+                return ResponseUtil.failure('Asset symbol is required', None), 400
 
             watchlist_id = self.watchlist_model.get_watchlist_id(user_id)
             self.watchlist_model.remove_from_watchlist(watchlist_id, asset_symbol)
