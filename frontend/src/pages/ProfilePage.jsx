@@ -68,8 +68,11 @@ const ProfilePage = ({ user }) => {
         headers: {
           "Content-Type": "application/json",
         },
-        credentials: "include", // Ensure cookies are sent with the request
-        body: JSON.stringify(newItem),
+        credentials: "include",
+        body: JSON.stringify({
+          asset_symbol: newItem.asset_symbol,
+          name: newItem.name,
+        }),
       });
       const data = await response.json();
       if (data.success) {

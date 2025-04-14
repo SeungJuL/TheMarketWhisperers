@@ -7,7 +7,7 @@ import { fetchWatchlist } from "../utils/userUtils"; // Import fetchWatchlist
 const DashboardPage = () => {
   const location = useLocation();
   const [activeTab, setActiveTab] = useState('AI Insights');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(''); // Initialize to an empty string
   const [stockData, setStockData] = useState(null); // Updated to store stock data
   const [isVisible, setIsVisible] = useState(false);
   const [isInWatchlist, setIsInWatchlist] = useState(false);
@@ -23,8 +23,10 @@ const DashboardPage = () => {
     const params = new URLSearchParams(location.search);
     const stock = params.get("stock");
     if (stock) {
-      setSearchQuery(stock);
+      setSearchQuery(stock); // Set searchQuery only if stock is defined
       getStockData(stock).then((val) => { setStockData(val) });
+    } else {
+      setSearchQuery(''); // Ensure searchQuery is blank by default
     }
   }, [location]);
 

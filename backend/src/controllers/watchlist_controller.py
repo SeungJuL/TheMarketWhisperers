@@ -11,7 +11,9 @@ class WatchlistController:
             user_id = current_user.id
             watchlist_id = self.watchlist_model.get_watchlist_id(user_id)
             items = self.watchlist_model.get_items(watchlist_id)
-            return ResponseUtil.success('Watchlists retrieved successfully', [{"name": item[1], "asset_symbol": item[0]} for item in items]), 200
+            return ResponseUtil.success('Watchlists retrieved successfully', [
+                {"asset_symbol": item[0], "name": item[1]} for item in items  # Correct mapping
+            ]), 200
         except Exception as e:
             return ResponseUtil.error('An error occurred while retrieving watchlists', str(e)), 500
 
@@ -25,9 +27,11 @@ class WatchlistController:
                 return ResponseUtil.failure('Name and asset symbol are required', None), 400
             
             watchlist_id = self.watchlist_model.get_watchlist_id(user_id)
-            self.watchlist_model.add_to_watchlist(watchlist_id, asset_symbol, name)
+            self.watchlist_model.add_to_watchlist(watchlist_id, asset_symbol, name)  # Correct parameter order
 
             return ResponseUtil.success('Asset added to watchlist', asset_symbol), 201
+        except ValueError as ve:
+            return ResponseUtil.failure(str(ve), None), 400  # Handle duplicate asset error
         except Exception as e:
             return ResponseUtil.error('An error occurred while adding to watchlist', str(e)), 500
 
