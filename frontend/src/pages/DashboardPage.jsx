@@ -22,11 +22,13 @@ const DashboardPage = () => {
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const stock = params.get("stock");
-    if (stock) {
-      setSearchQuery(stock); // Set searchQuery only if stock is defined
+
+    if (stock && stock.trim() !== "" && stock !== "undefined") { // Ensure stock is valid
+      setSearchQuery(stock); // Set searchQuery only if stock is valid
       getStockData(stock).then((val) => { setStockData(val) });
     } else {
       setSearchQuery(''); // Ensure searchQuery is blank by default
+      setStockData(null); // Reset stockData to avoid displaying invalid data
     }
   }, [location]);
 
