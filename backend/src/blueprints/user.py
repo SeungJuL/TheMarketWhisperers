@@ -1,5 +1,5 @@
-from flask import Blueprint, request
-from flask_login import login_required
+from flask import Blueprint, request, jsonify
+from flask_login import login_required, logout_user
 from controllers.user_controller import UserController
 
 user_blueprint = Blueprint('user', __name__)
@@ -32,3 +32,9 @@ def update_profile_picture():
 @login_required
 def update_password():
     return user_controller.change_password(request.get_json())
+
+@user_blueprint.route('/logout', methods=['POST'])
+@login_required
+def logout():
+    logout_user()
+    return jsonify(success=True, message="Logged out successfully"), 200

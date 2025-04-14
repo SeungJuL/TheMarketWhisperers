@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import PageWrapper from '../components/PageWrapper';
 import { useNavigate } from "react-router-dom"; // Add this import
+import { fetchWatchlist } from "../utils/userUtils";
 
 const ProfilePage = ({ user }) => {
   const navigate = useNavigate(); // Initialize the navigate function
@@ -28,29 +29,18 @@ const ProfilePage = ({ user }) => {
 
   useEffect(() => {
     if (activeTab === 'watchlist') {
-      fetchWatchlist();
+      fetchWatchlistData();
     }
   }, [activeTab]);
 
-  const fetchWatchlist = async () => {
+  const fetchWatchlistData = async () => {
     setMessage("");
     setError("");
     try {
-      const token = localStorage.getItem("token");
-      console.log("Token retrieved from localStorage:", token); // Debugging
-      const response = await fetch("http://127.0.0.1:8080/watchlist", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      console.log("Watchlist API Response:", response); // Debugging
-      const data = await response.json();
-      if (data.success) {
-        setWatchlist(data.data);
-      } else {
-        setError(data.message || "Failed to fetch watchlist");
-      }
+      const watchlistData = await fetchWatchlist();
+      setWatchlist(watchlistData);
     } catch (error) {
-      console.error("Fetch Watchlist Error:", error);
-      setError("Failed to connect to the server");
+      setError("Failed to fetch watchlist");
     }
   };
 
@@ -58,20 +48,19 @@ const ProfilePage = ({ user }) => {
     setMessage("");
     setError("");
     try {
-      const token = localStorage.getItem("token");
-      const response = await fetch("http://127.0.0.1:8080/watchlist", {
+      const response = await fetch("/watchlist", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
+        credentials: "include", // Ensure cookies are sent with the request
         body: JSON.stringify(newItem),
       });
       const data = await response.json();
       if (data.success) {
         setMessage("Item added to watchlist successfully!");
         setNewItem({ asset_symbol: "", name: "" });
-        fetchWatchlist();
+        fetchWatchlistData();
       } else {
         setError(data.message || "Failed to add item to watchlist");
       }
@@ -85,19 +74,18 @@ const ProfilePage = ({ user }) => {
     setMessage("");
     setError("");
     try {
-      const token = localStorage.getItem("token");
-      const response = await fetch("http://127.0.0.1:8080/watchlist", {
+      const response = await fetch("/watchlist", {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
+        credentials: "include", // Ensure cookies are sent with the request
         body: JSON.stringify({ asset_symbol }),
       });
       const data = await response.json();
       if (data.success) {
         setMessage("Item removed from watchlist successfully!");
-        fetchWatchlist();
+        fetchWatchlistData();
       } else {
         setError(data.message || "Failed to remove item from watchlist");
       }
@@ -135,13 +123,12 @@ const ProfilePage = ({ user }) => {
     setError("");
 
     try {
-      const token = localStorage.getItem("token");
       const response = await fetch("http://127.0.0.1:8080/user/update-profile", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
+        credentials: "include", // Ensure cookies are sent with the request
         body: JSON.stringify(profileData),
       });
 
@@ -174,13 +161,12 @@ const ProfilePage = ({ user }) => {
     }
 
     try {
-      const token = localStorage.getItem("token");
       const response = await fetch("http://127.0.0.1:8080/user/change-password", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
+        credentials: "include", // Ensure cookies are sent with the request
         body: JSON.stringify({
           currentPassword: passwordData.currentPassword,
           newPassword: passwordData.newPassword,
@@ -207,15 +193,19 @@ const ProfilePage = ({ user }) => {
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
+    if (!dateString) return "N/A";
+    const date = new Date(dateString);
+    return isNaN(date.getTime())
+      ? "N/A"
+      : date.toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric',
+        });
   };
 
   const handleWatchlistItemClick = (assetSymbol) => {
-    navigate(`/dashboard?stock=${assetSymbol}`); // Redirect to the dashboard with the stock name as a query parameter
+    navigate(`/dashboard?stock=${encodeURIComponent(assetSymbol)}`); // Ensure proper encoding of the asset symbol
   };
 
   return (
@@ -238,7 +228,7 @@ const ProfilePage = ({ user }) => {
                     {user.account_type}
                   </span>
                   <span className="ml-4 text-sm text-slate-400">
-                    Member since {user.created_at ? formatDate(user.created_at) : "N/A"}
+                    Member since {formatDate(user.created_at)}
                   </span>
                 </div>
               </div>
@@ -247,7 +237,7 @@ const ProfilePage = ({ user }) => {
 
           {/* Tabs - Fixed height */}
           <div className="flex space-x-4 h-[48px] mb-2">
-            {['profile', 'watchlist', 'activity', 'settings'].map((tab) => (
+            {['profile', 'watchlist', 'settings'].map((tab) => ( // Removed 'activity'
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -382,7 +372,7 @@ const ProfilePage = ({ user }) => {
                     <div
                       key={item.asset_symbol}
                       className="bg-slate-600 p-4 rounded-lg flex justify-between items-center cursor-pointer hover:bg-slate-500"
-                      onClick={() => handleWatchlistItemClick(item.asset_symbol)} // Add click handler
+                      onClick={() => handleWatchlistItemClick(item.asset_symbol)} // Pass asset symbol to the function
                     >
                       <div>
                         <h3 className="font-semibold">{item.name}</h3>
@@ -424,34 +414,6 @@ const ProfilePage = ({ user }) => {
                       Add
                     </button>
                   </div>
-                </div>
-              </div>
-            )}
-
-            {/* Activity Tab */}
-            {activeTab === 'activity' && (
-              <div className="h-full">
-                <h2 className="text-xl font-semibold mb-4">Recent Activity</h2>
-                <div className="space-y-4">
-                  {user.recent_activities.map((activity, index) => (
-                    <div
-                      key={index}
-                      className="bg-slate-600 p-4 rounded-lg flex items-center justify-between"
-                    >
-                      <div className="flex items-center">
-                        <div className="w-2 h-2 bg-blue-500 rounded-full mr-4"></div>
-                        <div>
-                          <p>{activity.description}</p>
-                          <p className="text-sm text-slate-300">{formatDate(activity.date)}</p>
-                        </div>
-                      </div>
-                      {activity.symbol && (
-                        <span className="bg-slate-700 px-2 py-1 rounded text-sm">
-                          {activity.symbol}
-                        </span>
-                      )}
-                    </div>
-                  ))}
                 </div>
               </div>
             )}

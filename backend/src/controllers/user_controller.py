@@ -101,7 +101,8 @@ class UserController:
                 'username': user_info[3],
                 'profile_picture_path': user_info[5],
                 'bio': user_info[6],
-                'phone_number': user_info[7]
+                'phone_number': user_info[7],
+                'created_at': user_info[4],  # Include created_at field
             }
 
             return ResponseUtil.success('Profile retrieved successfully', profile_data), 200
@@ -192,4 +193,4 @@ class UserController:
         except Exception as e:
             return ResponseUtil.error('An error occurred while updating password', str(e)), 500
 
-        
+

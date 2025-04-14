@@ -1,9 +1,21 @@
 import { Link } from "react-router-dom";
 
 const Navbar = ({ user, setUser }) => {
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    setUser(null);
+  const handleLogout = async () => {
+    try {
+      const response = await fetch("/user/logout", { // Use relative path
+        method: "POST",
+        credentials: "include", // Ensure cookies are sent with the request
+      });
+
+      if (response.ok) {
+        setUser(null); // Clear user state
+      } else {
+        console.error("Logout failed:", await response.text());
+      }
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
   };
 
   return (
@@ -101,10 +113,7 @@ const Navbar = ({ user, setUser }) => {
                 </span>
               </span>
               <button
-                onClick={() => {
-                  localStorage.removeItem("token");
-                  setUser(null);
-                }}
+                onClick={handleLogout}
                 className="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
               >
                 Logout

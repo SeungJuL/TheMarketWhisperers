@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import PageWrapper from "../components/PageWrapper";
 import { useNavigate } from "react-router-dom"; // Add this import
+import { fetchUserProfile } from "../utils/userUtils";
 
 const SignupPage = ({ setUser }) => {
   const navigate = useNavigate(); // Define navigate
@@ -34,22 +35,36 @@ const SignupPage = ({ setUser }) => {
     if (!validatePassword()) return;
 
     try {
-      const response = await fetch("http://127.0.0.1:8080/user/register", {
+      const response = await fetch("/user/register", { // Correct relative path
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password, username }),
+        credentials: "include", // Ensure cookies are sent with the request
       });
 
       const data = await response.json();
-      if (data.success) {
-        localStorage.setItem("token", data.data.token); // Store JWT token
-        setUser(data.data); // Update user state
-        navigate("/dashboard"); // Redirect to dashboard
+      if (response.ok && data.success) {
+        // Log in the user after successful registration
+        const loginResponse = await fetch("/user/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+          credentials: "include",
+        });
+
+        if (loginResponse.ok) {
+          const userProfile = await fetchUserProfile();
+          setUser(userProfile); // Update user state with profile data
+          navigate(`/dashboard?stock=${userProfile.asset_symbol}`); // Redirect to dashboard with asset symbol
+        } else {
+          setError("Failed to log in after registration.");
+        }
       } else {
-        alert("Signup failed!");
+        setError(data.message || "Signup failed!");
       }
     } catch (error) {
-      alert("Failed to connect to the server.");
+      console.error("Signup Error:", error);
+      setError("Failed to connect to the server.");
     }
   };
 
