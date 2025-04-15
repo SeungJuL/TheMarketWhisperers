@@ -47,6 +47,9 @@ class UserModel:
         if 'username' in update_data:
             sql += "username = %s, "
             values.append(update_data['username'])
+        if 'email' in update_data:  # Ensure email is handled
+            sql += "email = %s, "
+            values.append(update_data['email'])
         if 'bio' in update_data:
             sql += "bio = %s, "
             values.append(update_data['bio'])
@@ -61,8 +64,7 @@ class UserModel:
         # Execute the query
         db_cursor.execute(sql, values)
         self.db.commit()
-        return True
-
+        return db_cursor.rowcount > 0  # Return True if a row was updated
 
     def update_profile_picture(self, user_id, file_path):
         db_cursor = self.db.cursor()
@@ -70,5 +72,4 @@ class UserModel:
         db_cursor.execute(sql, (file_path, user_id))
         self.db.commit()
         return True
-    
-        
+
