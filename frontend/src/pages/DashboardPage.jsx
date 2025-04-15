@@ -268,7 +268,7 @@ const DashboardPage = () => {
 
           <div>
             {/* Stock Header */}
-            {isVisible &&             
+            {isVisible && stockData && (
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h1 className="text-2xl font-bold">{stockData.name} ({stockData.symbol})</h1>
@@ -289,10 +289,11 @@ const DashboardPage = () => {
                   </button>
                 </div>
                 {error && <div className="text-red-500">{error}</div>}
-              </div>}
+              </div>
+            )}
 
             {/* Metrics Grid */}
-            {isVisible &&
+            {isVisible && stockData && stockData.metrics && (
               <div className="flex flex-col md:flex-row gap-6 mb-6 w-full">
                 {/* Metric Cards */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:w-1/2">
@@ -347,7 +348,8 @@ const DashboardPage = () => {
                 <div className="md:w-1/2 flex justify-center items-center">
                   <StockChart historicalInfo={stockData} />
                 </div>
-              </div>}          
+              </div>
+            )}          
           </div>
 
           {/* Tabs */}
