@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from flask_login import login_required, logout_user
 from controllers.user_controller import UserController
+from dtos.response_dto import ResponseUtil
 
 user_blueprint = Blueprint('user', __name__)
 user_controller = UserController()
@@ -37,4 +38,4 @@ def update_password():
 @login_required
 def logout():
     logout_user()
-    return jsonify(success=True, message="Logged out successfully"), 200
+    return ResponseUtil.success("Logged out successfully", None), 200

@@ -104,7 +104,7 @@ class UserController:
                 'profile_picture_path': user_info[5],
                 'bio': user_info[6],
                 'phone_number': user_info[7],
-                'created_at': user_info[4],  # Include created_at field
+                'created_at': user_info[4], 
             }
 
             return ResponseUtil.success('Profile retrieved successfully', profile_data), 200
@@ -120,7 +120,6 @@ class UserController:
                 'username': data.get('username'),
                 'bio': data.get('bio'),
                 'phone_number': data.get('phone_number'),
-                'address': data.get('address')
             }
             
             # Remove None values
