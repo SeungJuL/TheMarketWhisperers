@@ -118,6 +118,7 @@ class UserController:
             user_id = current_user.id
             update_data = {
                 'username': data.get('username'),
+                'email': data.get('email'),  # Ensure email is included
                 'bio': data.get('bio'),
                 'phone_number': data.get('phone_number'),
             }
