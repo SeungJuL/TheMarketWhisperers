@@ -22,16 +22,13 @@ const HomePage = ({ user }) => {
           className="absolute inset-0 bg-cover bg-center"
           style={{
             backgroundImage: `
-        linear-gradient(
-          rgba(15, 23, 42, 0.85), 
-          rgba(15, 23, 42, 0.85)
-        ), 
-        url("/backgroundhome.png")
-      `,
+              linear-gradient(
+                rgba(15, 23, 42, 0.85), 
+                rgba(15, 23, 42, 0.85)
+              ), 
+              url("/backgroundhome.png")
+            `,
             backgroundBlendMode: "overlay",
-            // Optionally, you can remove the filter brightness
-            // if the gradient already darkens it enough:
-            // filter: "brightness(0.4)",
           }}
         />
         <div className="relative z-10 flex flex-col items-center justify-center min-h-screen">
@@ -49,12 +46,16 @@ const HomePage = ({ user }) => {
 
               {/* CTA Buttons */}
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link
-                  to="/signup"
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-md font-bold text-lg transition-colors flex items-center justify-center gap-2"
-                >
-                  Sign Up
-                </Link>
+                {/* Only show Sign Up if user is NOT logged in */}
+                {!user && (
+                  <Link
+                    to="/signup"
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-md font-bold text-lg transition-colors flex items-center justify-center gap-2"
+                  >
+                    Sign Up
+                  </Link>
+                )}
+
                 <Link
                   to="/about"
                   className="bg-slate-600 hover:bg-slate-800 text-white px-8 py-3 rounded-md font-bold text-lg transition-colors flex items-center justify-center gap-2"
