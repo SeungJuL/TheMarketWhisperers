@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import PageWrapper from "../components/PageWrapper";
+import { fetchUserProfile } from "../utils/userUtils";
 
 const LoginPage = ({ setUser }) => {
   const [email, setEmail] = useState("");
@@ -15,38 +16,21 @@ const LoginPage = ({ setUser }) => {
     setError("");
 
     try {
-      const response = await fetch("http://127.0.0.1:8080/user/login", {
+      const response = await fetch("/user/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
+        credentials: "include", // Ensure cookies are sent with the request
       });
-      const data = await response.json();
-      console.log("API Response Data:", data); // Debugging
 
-      if (data.success) {
-        const token = data.data?.token; // Safely access token
-        console.log("Token from API Response:", token); // Debugging
-        if (token) {
-          localStorage.setItem("token", token); // Store token in localStorage
-
-          // Fetch user profile after login
-          const profileResponse = await fetch("http://127.0.0.1:8080/user/profile", {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          const profileData = await profileResponse.json();
-
-          if (profileData.success) {
-            setUser(profileData.data); // Update user state with profile data
-            setMessage("Login Successful! Redirecting...");
-            setTimeout(() => navigate("/dashboard"), 2000);
-          } else {
-            setError("Failed to fetch user profile.");
-          }
-        } else {
-          setError("Token is missing in the response.");
-        }
+      if (response.ok) {
+        const userProfile = await fetchUserProfile();
+        setUser(userProfile); // Update user state with profile data
+        setMessage("Login Successful! Redirecting...");
+        setTimeout(() => navigate(`/dashboard?stock=${userProfile.asset_symbol}`), 2000); // Redirect with asset symbol
       } else {
-        setError(`Login failed! ${data.message}`);
+        const errorData = await response.json();
+        setError(`Login failed! ${errorData.message}`);
       }
     } catch (err) {
       console.error("Login Error:", err);

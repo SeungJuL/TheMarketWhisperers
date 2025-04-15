@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, make_response
+from flask import Flask, jsonify, make_response, request
 from flask_login import LoginManager
 from flask_cors import CORS 
 from dotenv import load_dotenv
@@ -11,11 +11,14 @@ import os
 
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, supports_credentials=True, resources={r"/*": {"origins": "http://localhost:3000"}}, methods=["GET", "POST", "DELETE", "OPTIONS"], allow_headers=["Content-Type", "Authorization"])
 
 # session
 load_dotenv()
 app.secret_key = os.getenv('SESSION_SECRET_KEY')
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['SESSION_COOKIE_SECURE'] = False  # Set to True in production with HTTPS
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.session_protection = 'strong'
@@ -26,7 +29,18 @@ def load_user(user_id):
 
 @login_manager.unauthorized_handler
 def unauthorized():
-    return make_response(jsonify(success=False), 401)
+    # Return a JSON response instead of a redirect
+    return make_response(jsonify(success=False, message="Unauthorized access"), 401)
+
+@app.before_request
+def handle_options_request():
+    if request.method == "OPTIONS":
+        response = make_response()
+        response.headers["Access-Control-Allow-Origin"] = "http://localhost:3000"
+        response.headers["Access-Control-Allow-Methods"] = "GET, POST, DELETE, OPTIONS"
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+        return response, 200
 
 # blue print
 app.register_blueprint(user_blueprint, url_prefix='/user')

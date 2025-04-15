@@ -2,11 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { useLocation } from "react-router-dom";
 import PageWrapper from '../components/PageWrapper';
 import StockChart from "../components/StockChart";
+import { fetchWatchlist } from "../utils/userUtils"; // Import fetchWatchlist
 
 const DashboardPage = () => {
   const location = useLocation();
   const [activeTab, setActiveTab] = useState('AI Insights');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(''); // Initialize to an empty string
   const [stockData, setStockData] = useState(null); // Updated to store stock data
   const [isVisible, setIsVisible] = useState(false);
   const [isInWatchlist, setIsInWatchlist] = useState(false);
@@ -21,18 +22,30 @@ const DashboardPage = () => {
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const stock = params.get("stock");
-    if (stock) {
-      setSearchQuery(stock);
+
+    if (stock && stock.trim() !== "" && stock !== "undefined") { // Ensure stock is valid
+      setSearchQuery(stock); // Set searchQuery only if stock is valid
       getStockData(stock).then((val) => { setStockData(val) });
+    } else {
+      setSearchQuery(''); // Ensure searchQuery is blank by default
+      setStockData(null); // Reset stockData to avoid displaying invalid data
     }
   }, [location]);
 
   const fetchWatchlistStatus = async (stockSymbol) => {
     try {
-      const token = localStorage.getItem("token");
-      const response = await fetch("http://127.0.0.1:8080/watchlist", {
-        headers: { Authorization: `Bearer ${token}` },
+      const response = await fetch("/watchlist", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
       });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch watchlist");
+      }
+
       const data = await response.json();
       if (data.success) {
         const isStockInWatchlist = data.data.some(
@@ -40,11 +53,11 @@ const DashboardPage = () => {
         );
         setIsInWatchlist(isStockInWatchlist);
       } else {
-        setError(data.message || "Failed to fetch watchlist");
+        throw new Error(data.message || "Failed to fetch watchlist");
       }
     } catch (error) {
       console.error("Fetch Watchlist Error:", error);
-      setError("Failed to connect to the server");
+      setError("Failed to fetch watchlist");
     }
   };
 
@@ -56,19 +69,20 @@ const DashboardPage = () => {
 
     setError("");
     try {
-      const token = localStorage.getItem("token");
-      const url = "http://127.0.0.1:8080/watchlist";
       const method = isInWatchlist ? "DELETE" : "POST";
-      const body = JSON.stringify({ asset_symbol: stockData.symbol, name: stockData.symbol });
+      const body = isInWatchlist
+        ? { asset_symbol: stockData.symbol }
+        : { asset_symbol: stockData.symbol, name: stockData.name };
 
-      const response = await fetch(url, {
+      const response = await fetch("/watchlist", {
         method,
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
-        body,
+        credentials: "include",
+        body: JSON.stringify(body),
       });
+
       const data = await response.json();
       if (data.success) {
         setIsInWatchlist(!isInWatchlist);
@@ -254,7 +268,7 @@ const DashboardPage = () => {
 
           <div>
             {/* Stock Header */}
-            {isVisible &&             
+            {isVisible && stockData && (
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h1 className="text-2xl font-bold">{stockData.name} ({stockData.symbol})</h1>
@@ -275,10 +289,11 @@ const DashboardPage = () => {
                   </button>
                 </div>
                 {error && <div className="text-red-500">{error}</div>}
-              </div>}
+              </div>
+            )}
 
             {/* Metrics Grid */}
-            {isVisible &&
+            {isVisible && stockData && stockData.metrics && (
               <div className="flex flex-col md:flex-row gap-6 mb-6 w-full">
                 {/* Metric Cards */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:w-1/2">
@@ -333,7 +348,8 @@ const DashboardPage = () => {
                 <div className="md:w-1/2 flex justify-center items-center">
                   <StockChart historicalInfo={stockData} />
                 </div>
-              </div>}          
+              </div>
+            )}          
           </div>
 
           {/* Tabs */}
