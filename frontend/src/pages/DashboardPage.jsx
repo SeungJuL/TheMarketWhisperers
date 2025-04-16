@@ -7,12 +7,14 @@ import { fetchWatchlist } from "../utils/userUtils"; // Import fetchWatchlist
 const DashboardPage = () => {
   const location = useLocation();
   const [activeTab, setActiveTab] = useState('AI Insights');
-  const [searchQuery, setSearchQuery] = useState(''); // Initialize to an empty string
+  const [stockSearchQuery, setStockSearchQuery] = useState(''); // For "Search for a stock" text box
+  const [aiSearchQuery, setAiSearchQuery] = useState(''); // For AI search box
   const [stockData, setStockData] = useState(null); // Updated to store stock data
   const [isVisible, setIsVisible] = useState(false);
   const [isInWatchlist, setIsInWatchlist] = useState(false);
   const [error, setError] = useState("");
   const [aiResponse, setAiResponse] = useState(""); // Store AI response
+  const [isLoading, setIsLoading] = useState(false); // Add loading state
 
   useEffect(() => {
     if (stockData?.symbol) {
@@ -25,10 +27,10 @@ const DashboardPage = () => {
     const stock = params.get("stock");
 
     if (stock && stock.trim() !== "" && stock !== "undefined") { // Ensure stock is valid
-      setSearchQuery(stock); // Set searchQuery only if stock is valid
+      setStockSearchQuery(stock); // Set searchQuery only if stock is valid
       getStockData(stock).then((val) => { setStockData(val) });
     } else {
-      setSearchQuery(''); // Ensure searchQuery is blank by default
+      setStockSearchQuery(''); // Ensure searchQuery is blank by default
       setStockData(null); // Reset stockData to avoid displaying invalid data
     }
   }, [location]);
@@ -116,6 +118,8 @@ const DashboardPage = () => {
   };
 
   const handleAiSearch = async (userInput) => {
+    setIsLoading(true); // Start loading
+    setError(""); // Clear previous errors
     try {
       // Step 1: Extract the stock ticker symbol
       const tickerResponse = await fetch("/ai/", {
@@ -138,7 +142,7 @@ const DashboardPage = () => {
       if (extractedSymbol) {
         const isValid = await validateStockSymbol(extractedSymbol);
         if (isValid) {
-          setSearchQuery(extractedSymbol);
+          setStockSearchQuery(extractedSymbol); // Update the stock search box with the extracted symbol
           const stockInfo = await getStockData(extractedSymbol);
           setStockData(stockInfo);
         } else {
@@ -168,6 +172,9 @@ const DashboardPage = () => {
     } catch (error) {
       console.error("AI Search Error:", error);
       setError("Failed to connect to the AI service.");
+    } finally {
+      setAiSearchQuery(''); // Clear the AI search box
+      setIsLoading(false); // Stop loading
     }
   };
 
@@ -327,11 +334,11 @@ const DashboardPage = () => {
               type="text"
               placeholder="Search for a stock"
               className="bg-slate-800 text-white px-6 py-3 border-b-2 border-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-lg hover:border-blue-400 transition-all duration-300 rounded-lg"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              value={stockSearchQuery}
+              onChange={(e) => setStockSearchQuery(e.target.value)}
               onKeyUp={(evt) => { if (evt.key === 'Enter') { 
                   
-                  getStockData(searchQuery).then((val) => { setStockData(val) });
+                  getStockData(stockSearchQuery).then((val) => { setStockData(val) });
                }}}
             />
           </div>
@@ -447,12 +454,16 @@ const DashboardPage = () => {
 
           {/* Tab Content */}
           <div className="bg-slate-700 rounded-lg p-6 mb-6">
-            {activeTab === 'AI Insights' && (
-              <div>
-                <p className="text-slate-300">{aiResponse || "Ask a question to get AI insights."}</p>
-              </div>
+            {isLoading ? (
+              <div className="text-center text-white">Loading...</div>
+            ) : (
+              activeTab === 'AI Insights' && (
+                <div>
+                  <p className="text-slate-300">{aiResponse || "Ask a question to get AI insights."}</p>
+                </div>
+              )
             )}
-            {/* Other tab contents will be implemented similarly */}
+            {/* ...existing code for other tabs... */}
           </div>
 
           {/* Ask AI Section */}
@@ -462,17 +473,22 @@ const DashboardPage = () => {
                 type="text"
                 placeholder="Ask me anything"
                 className="flex-1 bg-slate-600 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={aiSearchQuery}
+                onChange={(e) => setAiSearchQuery(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    handleAiSearch(e.target.value);
+                  if (e.key === "Enter" && !isLoading) {
+                    handleAiSearch(aiSearchQuery);
                   }
                 }}
               />
               <button
-                onClick={() => handleAiSearch(searchQuery)}
-                className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
+                onClick={() => handleAiSearch(aiSearchQuery)}
+                className={`bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 ${
+                  isLoading ? "opacity-50 cursor-not-allowed" : ""
+                }`}
+                disabled={isLoading}
               >
-                Send
+                {isLoading ? "Loading..." : "Send"}
               </button>
             </div>
           </div>
