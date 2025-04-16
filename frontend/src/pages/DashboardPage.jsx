@@ -7,11 +7,14 @@ import { fetchWatchlist } from "../utils/userUtils"; // Import fetchWatchlist
 const DashboardPage = () => {
   const location = useLocation();
   const [activeTab, setActiveTab] = useState('AI Insights');
-  const [searchQuery, setSearchQuery] = useState(''); // Initialize to an empty string
+  const [stockSearchQuery, setStockSearchQuery] = useState(''); // For "Search for a stock" text box
+  const [aiSearchQuery, setAiSearchQuery] = useState(''); // For AI search box
   const [stockData, setStockData] = useState(null); // Updated to store stock data
   const [isVisible, setIsVisible] = useState(false);
   const [isInWatchlist, setIsInWatchlist] = useState(false);
   const [error, setError] = useState("");
+  const [aiResponse, setAiResponse] = useState(""); // Store AI response
+  const [isLoading, setIsLoading] = useState(false); // Add loading state
 
   useEffect(() => {
     if (stockData?.symbol) {
@@ -24,10 +27,10 @@ const DashboardPage = () => {
     const stock = params.get("stock");
 
     if (stock && stock.trim() !== "" && stock !== "undefined") { // Ensure stock is valid
-      setSearchQuery(stock); // Set searchQuery only if stock is valid
+      setStockSearchQuery(stock); // Set searchQuery only if stock is valid
       getStockData(stock).then((val) => { setStockData(val) });
     } else {
-      setSearchQuery(''); // Ensure searchQuery is blank by default
+      setStockSearchQuery(''); // Ensure searchQuery is blank by default
       setStockData(null); // Reset stockData to avoid displaying invalid data
     }
   }, [location]);
@@ -112,6 +115,84 @@ const DashboardPage = () => {
     }
 
     return dateObj;
+  };
+
+  const handleAiSearch = async (userInput) => {
+    setIsLoading(true); // Start loading
+    setError(""); // Clear previous errors
+    try {
+      // Step 1: Extract the stock ticker symbol
+      const tickerResponse = await fetch("/ai/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_message: `Extract the most relevant stock ticker symbol for the company mentioned in this query: "${userInput}". Respond only with "Ticker: [SYMBOL]" where [SYMBOL] is the stock ticker.`,
+        }),
+      });
+
+      if (!tickerResponse.ok) {
+        throw new Error("Failed to fetch AI ticker response");
+      }
+
+      const tickerData = await tickerResponse.json();
+      const extractedSymbol = extractStockSymbol(tickerData.data);
+
+      if (extractedSymbol) {
+        const isValid = await validateStockSymbol(extractedSymbol);
+        if (isValid) {
+          setStockSearchQuery(extractedSymbol); // Update the stock search box with the extracted symbol
+          const stockInfo = await getStockData(extractedSymbol);
+          setStockData(stockInfo);
+        } else {
+          setError(`Invalid or delisted stock symbol: ${extractedSymbol}`);
+        }
+      } else {
+        setError("No valid stock symbol found in AI response.");
+      }
+
+      // Step 2: Generate detailed AI insights
+      const insightsResponse = await fetch("/ai/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_message: `Provide a detailed response to this query: "${userInput}".`,
+        }),
+      });
+
+      if (!insightsResponse.ok) {
+        throw new Error("Failed to fetch AI insights response");
+      }
+
+      const insightsData = await insightsResponse.json();
+      setAiResponse(insightsData.data); // Update AI Insights tab with detailed response
+    } catch (error) {
+      console.error("AI Search Error:", error);
+      setError("Failed to connect to the AI service.");
+    } finally {
+      setAiSearchQuery(''); // Clear the AI search box
+      setIsLoading(false); // Stop loading
+    }
+  };
+
+  const validateStockSymbol = async (symbol) => {
+    try {
+      const response = await fetch(`http://localhost:8080/stock/${symbol}/info`, {
+        method: "GET",
+      });
+      return response.ok; // If the response is OK, the symbol is valid
+    } catch (error) {
+      console.error("Stock Symbol Validation Error:", error);
+      return false;
+    }
+  };
+
+  const extractStockSymbol = (aiText) => {
+    const match = aiText.match(/Ticker:\s*([A-Z]{1,5})/); // Match "Ticker: SYMBOL"
+    return match ? match[1] : null;
   };
 
   const getStockData = async (stockName) => {
@@ -253,11 +334,11 @@ const DashboardPage = () => {
               type="text"
               placeholder="Search for a stock"
               className="bg-slate-800 text-white px-6 py-3 border-b-2 border-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-lg hover:border-blue-400 transition-all duration-300 rounded-lg"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              value={stockSearchQuery}
+              onChange={(e) => setStockSearchQuery(e.target.value)}
               onKeyUp={(evt) => { if (evt.key === 'Enter') { 
                   
-                  getStockData(searchQuery).then((val) => { setStockData(val) });
+                  getStockData(stockSearchQuery).then((val) => { setStockData(val) });
                }}}
             />
           </div>
@@ -373,22 +454,16 @@ const DashboardPage = () => {
 
           {/* Tab Content */}
           <div className="bg-slate-700 rounded-lg p-6 mb-6">
-            {activeTab === 'AI Insights' && (
-              <div>
-                {/* TODO: Replace with actual AI insights */}
-                <p className="text-slate-300">
-                  Apple Inc. (AAPL) remains a strong long-term investment due to its market-leading position, consistent
-                  revenue streams from hardware and services, and robust financial health with a market cap of over $3
-                  trillion. While the stock has recently faced challenges, including slowing iPhone sales and competition in
-                  China, its diversified product ecosystem, high customer loyalty, and strong cash flow provide resilience.
-                  However, with a relatively high P/E ratio around 36.59, the stock is priced for growth, which could be risky if
-                  innovation slows or market dynamics worsen. For investors, Apple offers stability and long-term potential
-                  but may not be a bargain at current valuations. Assess your risk tolerance and investment goals before
-                  committing.
-                </p>
-              </div>
+            {isLoading ? (
+              <div className="text-center text-white">Loading...</div>
+            ) : (
+              activeTab === 'AI Insights' && (
+                <div>
+                  <p className="text-slate-300">{aiResponse || "Ask a question to get AI insights."}</p>
+                </div>
+              )
             )}
-            {/* Other tab contents will be implemented similarly */}
+            {/* ...existing code for other tabs... */}
           </div>
 
           {/* Ask AI Section */}
@@ -398,9 +473,22 @@ const DashboardPage = () => {
                 type="text"
                 placeholder="Ask me anything"
                 className="flex-1 bg-slate-600 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={aiSearchQuery}
+                onChange={(e) => setAiSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !isLoading) {
+                    handleAiSearch(aiSearchQuery);
+                  }
+                }}
               />
-              <button className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
-                Send
+              <button
+                onClick={() => handleAiSearch(aiSearchQuery)}
+                className={`bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 ${
+                  isLoading ? "opacity-50 cursor-not-allowed" : ""
+                }`}
+                disabled={isLoading}
+              >
+                {isLoading ? "Loading..." : "Send"}
               </button>
             </div>
           </div>
