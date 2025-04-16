@@ -12,6 +12,7 @@ const DashboardPage = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [isInWatchlist, setIsInWatchlist] = useState(false);
   const [error, setError] = useState("");
+  const [aiResponse, setAiResponse] = useState(""); // Store AI response
 
   useEffect(() => {
     if (stockData?.symbol) {
@@ -112,6 +113,60 @@ const DashboardPage = () => {
     }
 
     return dateObj;
+  };
+
+  const handleAiSearch = async (userInput) => {
+    try {
+      const response = await fetch("/ai/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ user_message: userInput }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch AI response");
+      }
+
+      const data = await response.json();
+      setAiResponse(data.data); // Update AI Insights tab with response
+
+      // Extract stock ticker symbol from AI response
+      const extractedSymbol = extractStockSymbol(data.data);
+      if (extractedSymbol) {
+        const isValid = await validateStockSymbol(extractedSymbol);
+        if (isValid) {
+          setSearchQuery(extractedSymbol);
+          const stockInfo = await getStockData(extractedSymbol);
+          setStockData(stockInfo);
+        } else {
+          setError(`Invalid or delisted stock symbol: ${extractedSymbol}`);
+        }
+      } else {
+        setError("No valid stock symbol found in AI response.");
+      }
+    } catch (error) {
+      console.error("AI Search Error:", error);
+      setError("Failed to connect to the AI service.");
+    }
+  };
+
+  const validateStockSymbol = async (symbol) => {
+    try {
+      const response = await fetch(`http://localhost:8080/stock/${symbol}/info`, {
+        method: "GET",
+      });
+      return response.ok; // If the response is OK, the symbol is valid
+    } catch (error) {
+      console.error("Stock Symbol Validation Error:", error);
+      return false;
+    }
+  };
+
+  const extractStockSymbol = (aiText) => {
+    const match = aiText.match(/\b[A-Z]{1,5}\b/); // Match stock ticker symbols (1-5 uppercase letters)
+    return match ? match[0] : null;
   };
 
   const getStockData = async (stockName) => {
@@ -375,17 +430,7 @@ const DashboardPage = () => {
           <div className="bg-slate-700 rounded-lg p-6 mb-6">
             {activeTab === 'AI Insights' && (
               <div>
-                {/* TODO: Replace with actual AI insights */}
-                <p className="text-slate-300">
-                  Apple Inc. (AAPL) remains a strong long-term investment due to its market-leading position, consistent
-                  revenue streams from hardware and services, and robust financial health with a market cap of over $3
-                  trillion. While the stock has recently faced challenges, including slowing iPhone sales and competition in
-                  China, its diversified product ecosystem, high customer loyalty, and strong cash flow provide resilience.
-                  However, with a relatively high P/E ratio around 36.59, the stock is priced for growth, which could be risky if
-                  innovation slows or market dynamics worsen. For investors, Apple offers stability and long-term potential
-                  but may not be a bargain at current valuations. Assess your risk tolerance and investment goals before
-                  committing.
-                </p>
+                <p className="text-slate-300">{aiResponse || "Ask a question to get AI insights."}</p>
               </div>
             )}
             {/* Other tab contents will be implemented similarly */}
@@ -398,8 +443,16 @@ const DashboardPage = () => {
                 type="text"
                 placeholder="Ask me anything"
                 className="flex-1 bg-slate-600 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    handleAiSearch(e.target.value);
+                  }
+                }}
               />
-              <button className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
+              <button
+                onClick={() => handleAiSearch(searchQuery)}
+                className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
+              >
                 Send
               </button>
             </div>
