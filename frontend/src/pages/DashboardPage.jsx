@@ -122,7 +122,9 @@ const DashboardPage = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ user_message: userInput }),
+        body: JSON.stringify({
+          user_message: `Extract the most relevant stock ticker symbol for the company mentioned in this query: "${userInput}". Respond only with "Ticker: [SYMBOL]" where [SYMBOL] is the stock ticker.`,
+        }),
       });
 
       if (!response.ok) {
@@ -165,8 +167,8 @@ const DashboardPage = () => {
   };
 
   const extractStockSymbol = (aiText) => {
-    const match = aiText.match(/\b[A-Z]{1,5}\b/); // Match stock ticker symbols (1-5 uppercase letters)
-    return match ? match[0] : null;
+    const match = aiText.match(/Ticker:\s*([A-Z]{1,5})/); // Match "Ticker: SYMBOL"
+    return match ? match[1] : null;
   };
 
   const getStockData = async (stockName) => {
