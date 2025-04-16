@@ -19,7 +19,7 @@ class WatchlistModel:
         return watchlist_id
 
     def get_items(self, watchlist_id):
-        # get watchlist items
+        # Correctly map asset_symbol and name
         psql_db = conn_psql()
         db_cursor = psql_db.cursor()
         sql = "SELECT asset_symbol, name FROM watchlist_items WHERE watchlist_id = %s"
@@ -27,12 +27,19 @@ class WatchlistModel:
         items = db_cursor.fetchall()
         return items
 
-    def add_to_watchlist(self, watchlist_id, name, asset_symbol):
+    def add_to_watchlist(self, watchlist_id, asset_symbol, name):
         psql_db = conn_psql()
         db_cursor = psql_db.cursor()
-        sql = "INSERT INTO watchlist_items(watchlist_id, name, asset_symbol) VALUES(%s, %s, %s)"
-        db_cursor.execute(sql, (watchlist_id, name, asset_symbol))
-        psql_db.commit()
+        sql = "INSERT INTO watchlist_items(watchlist_id, asset_symbol, name) VALUES(%s, %s, %s)"
+        try:
+            db_cursor.execute(sql, (watchlist_id, asset_symbol, name))
+            psql_db.commit()
+        except Exception as e:
+            psql_db.rollback()  # Rollback the transaction to avoid leaving it in an aborted state
+            if "duplicate key value" in str(e):  # Handle unique constraint violation
+                raise ValueError("This asset is already in your watchlist")
+            else:
+                raise
     
     def remove_from_watchlist(self, watchlist_id, asset_symbol):
         psql_db = conn_psql()

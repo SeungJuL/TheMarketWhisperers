@@ -1,22 +1,19 @@
 import React, { useState, useEffect } from "react";
 import PageWrapper from '../components/PageWrapper';
+import { useNavigate } from "react-router-dom"; // Add this import
 
 const ProfilePage = ({ user }) => {
+  const navigate = useNavigate(); // Initialize the navigate function
   const [activeTab, setActiveTab] = useState('profile');
   const [isEditing, setIsEditing] = useState(false);
-  const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [profileData, setProfileData] = useState({
     username: user?.username || "",
     email: user?.email || "",
     first_name: user?.first_name || "",
     last_name: user?.last_name || "",
     bio: user?.bio || "",
-    location: user?.location || ""
-  });
-  const [passwordData, setPasswordData] = useState({
-    currentPassword: "",
-    newPassword: "",
-    confirmPassword: "",
+    location: user?.location || "",
+    phone_number: user?.phone_number || ""
   });
   const [preferences, setPreferences] = useState(user?.preferences || {});
   const [message, setMessage] = useState("");
@@ -26,29 +23,34 @@ const ProfilePage = ({ user }) => {
 
   useEffect(() => {
     if (activeTab === 'watchlist') {
-      fetchWatchlist();
+      fetchWatchlistData();
     }
   }, [activeTab]);
 
-  const fetchWatchlist = async () => {
+  const fetchWatchlistData = async () => {
     setMessage("");
     setError("");
     try {
-      const token = localStorage.getItem("token");
-      console.log("Token retrieved from localStorage:", token); // Debugging
-      const response = await fetch("http://127.0.0.1:8080/watchlist", {
-        headers: { Authorization: `Bearer ${token}` },
+      const response = await fetch("/watchlist", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
       });
-      console.log("Watchlist API Response:", response); // Debugging
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch watchlist");
+      }
+
       const data = await response.json();
       if (data.success) {
         setWatchlist(data.data);
       } else {
-        setError(data.message || "Failed to fetch watchlist");
+        throw new Error(data.message || "Failed to fetch watchlist");
       }
     } catch (error) {
-      console.error("Fetch Watchlist Error:", error);
-      setError("Failed to connect to the server");
+      setError("Failed to fetch watchlist");
     }
   };
 
@@ -56,20 +58,22 @@ const ProfilePage = ({ user }) => {
     setMessage("");
     setError("");
     try {
-      const token = localStorage.getItem("token");
-      const response = await fetch("http://127.0.0.1:8080/watchlist", {
+      const response = await fetch("/watchlist", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(newItem),
+        credentials: "include",
+        body: JSON.stringify({
+          asset_symbol: newItem.asset_symbol,
+          name: newItem.name,
+        }),
       });
       const data = await response.json();
       if (data.success) {
         setMessage("Item added to watchlist successfully!");
         setNewItem({ asset_symbol: "", name: "" });
-        fetchWatchlist();
+        fetchWatchlistData();
       } else {
         setError(data.message || "Failed to add item to watchlist");
       }
@@ -83,19 +87,18 @@ const ProfilePage = ({ user }) => {
     setMessage("");
     setError("");
     try {
-      const token = localStorage.getItem("token");
-      const response = await fetch("http://127.0.0.1:8080/watchlist", {
+      const response = await fetch("/watchlist", {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
+        credentials: "include", // Ensure cookies are sent with the request
         body: JSON.stringify({ asset_symbol }),
       });
       const data = await response.json();
       if (data.success) {
         setMessage("Item removed from watchlist successfully!");
-        fetchWatchlist();
+        fetchWatchlistData();
       } else {
         setError(data.message || "Failed to remove item from watchlist");
       }
@@ -113,14 +116,6 @@ const ProfilePage = ({ user }) => {
     });
   };
 
-  const handlePasswordChange = (e) => {
-    const { name, value } = e.target;
-    setPasswordData({
-      ...passwordData,
-      [name]: value,
-    });
-  };
-
   const handlePreferenceChange = (key) => {
     setPreferences(prev => ({
       ...prev,
@@ -133,14 +128,13 @@ const ProfilePage = ({ user }) => {
     setError("");
 
     try {
-      const token = localStorage.getItem("token");
-      const response = await fetch("http://127.0.0.1:8080/user/update-profile", {
+      const response = await fetch("/user/profile", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(profileData),
+        credentials: "include", // Ensure cookies are sent with the request
+        body: JSON.stringify(profileData), // Ensure email is included in profileData
       });
 
       const data = await response.json();
@@ -157,62 +151,23 @@ const ProfilePage = ({ user }) => {
     }
   };
 
-  const handlePasswordUpdate = async () => {
-    setMessage("");
-    setError("");
-
-    if (passwordData.newPassword !== passwordData.confirmPassword) {
-      setError("New passwords don't match");
-      return;
-    }
-
-    if (passwordData.newPassword.length < 8) {
-      setError("Password must be at least 8 characters long");
-      return;
-    }
-
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch("http://127.0.0.1:8080/user/change-password", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          currentPassword: passwordData.currentPassword,
-          newPassword: passwordData.newPassword,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        setMessage("Password changed successfully!");
-        setIsChangingPassword(false);
-        setPasswordData({
-          currentPassword: "",
-          newPassword: "",
-          confirmPassword: "",
-        });
-      } else {
-        setError(data.message || "Failed to change password");
-      }
-    } catch (error) {
-      console.error("Password Change Error:", error);
-      setError("Failed to connect to the server");
-    }
-  };
-
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
+    if (!dateString) return "N/A";
+    const date = new Date(dateString);
+    return isNaN(date.getTime())
+      ? "N/A"
+      : date.toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric',
+        });
   };
 
-    return (
+  const handleWatchlistItemClick = (assetSymbol) => {
+    navigate(`/dashboard?stock=${encodeURIComponent(assetSymbol)}`); // Ensure proper encoding of the asset symbol
+  };
+
+  return (
     <PageWrapper>
       <div className="flex flex-col min-h-screen">
         <div className="max-w-6xl mx-auto px-4 w-full mt-28">
@@ -232,7 +187,7 @@ const ProfilePage = ({ user }) => {
                     {user.account_type}
                   </span>
                   <span className="ml-4 text-sm text-slate-400">
-                    Member since {user.created_at ? formatDate(user.created_at) : "N/A"}
+                    Member since {formatDate(user.created_at)}
                   </span>
                 </div>
               </div>
@@ -241,7 +196,7 @@ const ProfilePage = ({ user }) => {
 
           {/* Tabs - Fixed height */}
           <div className="flex space-x-4 h-[48px] mb-2">
-            {['profile', 'watchlist', 'activity', 'settings'].map((tab) => (
+            {['profile', 'watchlist', 'settings'].map((tab) => ( // Removed 'activity'
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -269,23 +224,30 @@ const ProfilePage = ({ user }) => {
               <div className="h-full">
                 {!isEditing ? (
                   <div className="space-y-6">
+                    {/* Username */}
                     <div>
-                      <h2 className="text-xl font-semibold mb-4">About Me</h2>
-                      <p className="text-slate-300">{user.bio}</p>
+                      <h2 className="text-xl font-semibold mb-4">Username</h2>
+                      <p className="text-slate-300">{user.username || "N/A"}</p>
                     </div>
+
+                    {/* Email */}
                     <div>
-                      <h2 className="text-xl font-semibold mb-4">Contact Information</h2>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <p className="text-slate-400">Email</p>
-                          <p>{user.email}</p>
-                        </div>
-                        <div>
-                          <p className="text-slate-400">Username</p>
-                          <p>{user.username}</p>
-                        </div>
-                      </div>
+                      <h2 className="text-xl font-semibold mb-4">Email</h2>
+                      <p className="text-slate-300">{user.email || "N/A"}</p>
                     </div>
+
+                    {/* Phone Number */}
+                    <div>
+                      <h2 className="text-xl font-semibold mb-4">Phone Number</h2>
+                      <p className="text-slate-300">{user.phone_number || "N/A"}</p>
+                    </div>
+
+                    {/* Biography */}
+                    <div>
+                      <h2 className="text-xl font-semibold mb-4">Biography</h2>
+                      <p className="text-slate-300">{user.bio || "N/A"}</p>
+                    </div>
+
                     <div className="flex justify-center space-x-4">
                       <button
                         onClick={() => setIsEditing(true)}
@@ -293,39 +255,50 @@ const ProfilePage = ({ user }) => {
                       >
                         Edit Profile
                       </button>
-                      <button
-                        onClick={() => setIsChangingPassword(true)}
-                        className="px-4 py-2 bg-slate-900 hover:bg-blue-800 rounded text-white font-semibold"
-                      >
-                        Change Password
-                      </button>
                     </div>
                   </div>
                 ) : (
                   <div className="space-y-6">
                     <h2 className="text-2xl font-bold mb-4">Edit Profile</h2>
                     <div className="grid grid-cols-2 gap-6">
+                      {/* Username */}
                       <div className="mb-4">
-                        <label className="block text-sm mb-1">First Name</label>
+                        <label className="block text-sm mb-1">Username</label>
                         <input
                           type="text"
-                          name="first_name"
-                          value={profileData.first_name}
+                          name="username"
+                          value={profileData.username}
                           onChange={handleProfileChange}
                           className="w-full p-2 text-black bg-white rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
                         />
                       </div>
+
+                      {/* Email */}
                       <div className="mb-4">
-                        <label className="block text-sm mb-1">Last Name</label>
+                        <label className="block text-sm mb-1">Email</label>
+                        <input
+                          type="email"
+                          name="email"
+                          value={profileData.email}
+                          onChange={handleProfileChange}
+                          className="w-full p-2 text-black bg-white rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        />
+                      </div>
+
+                      {/* Phone Number */}
+                      <div className="mb-4">
+                        <label className="block text-sm mb-1">Phone Number</label>
                         <input
                           type="text"
-                          name="last_name"
-                          value={profileData.last_name}
+                          name="phone_number"
+                          value={profileData.phone_number}
                           onChange={handleProfileChange}
                           className="w-full p-2 text-black bg-white rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
                         />
                       </div>
                     </div>
+
+                    {/* Biography */}
                     <div className="mb-4">
                       <label className="block text-sm mb-1">Bio</label>
                       <textarea
@@ -336,16 +309,7 @@ const ProfilePage = ({ user }) => {
                         className="w-full p-2 text-black bg-white rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
                       />
                     </div>
-                    <div className="mb-4">
-                      <label className="block text-sm mb-1">Location</label>
-                      <input
-                        type="text"
-                        name="location"
-                        value={profileData.location}
-                        onChange={handleProfileChange}
-                        className="w-full p-2 text-black bg-white rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
-                      />
-                    </div>
+
                     <div className="flex justify-center space-x-4">
                       <button
                         onClick={handleProfileUpdate}
@@ -375,14 +339,18 @@ const ProfilePage = ({ user }) => {
                   {watchlist.map((item) => (
                     <div
                       key={item.asset_symbol}
-                      className="bg-slate-600 p-4 rounded-lg flex justify-between items-center"
+                      className="bg-slate-600 p-4 rounded-lg flex justify-between items-center cursor-pointer hover:bg-slate-500"
+                      onClick={() => handleWatchlistItemClick(item.asset_symbol)} // Pass asset symbol to the function
                     >
                       <div>
                         <h3 className="font-semibold">{item.name}</h3>
                         <p className="text-sm text-slate-300">{item.asset_symbol}</p>
                       </div>
                       <button
-                        onClick={() => handleRemoveFromWatchlist(item.asset_symbol)}
+                        onClick={(e) => {
+                          e.stopPropagation(); // Prevent triggering the parent click event
+                          handleRemoveFromWatchlist(item.asset_symbol);
+                        }}
                         className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium"
                       >
                         Remove
@@ -414,34 +382,6 @@ const ProfilePage = ({ user }) => {
                       Add
                     </button>
                   </div>
-                </div>
-              </div>
-            )}
-
-            {/* Activity Tab */}
-            {activeTab === 'activity' && (
-              <div className="h-full">
-                <h2 className="text-xl font-semibold mb-4">Recent Activity</h2>
-                <div className="space-y-4">
-                  {user.recent_activities.map((activity, index) => (
-                    <div
-                      key={index}
-                      className="bg-slate-600 p-4 rounded-lg flex items-center justify-between"
-                    >
-                      <div className="flex items-center">
-                        <div className="w-2 h-2 bg-blue-500 rounded-full mr-4"></div>
-                        <div>
-                          <p>{activity.description}</p>
-                          <p className="text-sm text-slate-300">{formatDate(activity.date)}</p>
-                        </div>
-                      </div>
-                      {activity.symbol && (
-                        <span className="bg-slate-700 px-2 py-1 rounded text-sm">
-                          {activity.symbol}
-                        </span>
-                      )}
-                    </div>
-                  ))}
                 </div>
               </div>
             )}
@@ -484,64 +424,11 @@ const ProfilePage = ({ user }) => {
                 </div>
               </div>
             )}
-
-            {/* Password Change Form */}
-            {isChangingPassword && (
-              <div className="mt-8 pt-6 border-t border-slate-500">
-                <h2 className="text-2xl font-bold mb-4">Change Password</h2>
-                <div className="space-y-4">
-                  <div className="mb-4">
-                    <label className="block text-sm mb-1">Current Password</label>
-                    <input
-                      type="password"
-                      name="currentPassword"
-                      value={passwordData.currentPassword}
-                      onChange={handlePasswordChange}
-                      className="w-full p-2 text-black bg-white rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
-                    />
-                  </div>
-                  <div className="mb-4">
-                    <label className="block text-sm mb-1">New Password</label>
-                    <input
-                      type="password"
-                      name="newPassword"
-                      value={passwordData.newPassword}
-                      onChange={handlePasswordChange}
-                      className="w-full p-2 text-black bg-white rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
-                    />
-                  </div>
-                  <div className="mb-4">
-                    <label className="block text-sm mb-1">Confirm New Password</label>
-                    <input
-                      type="password"
-                      name="confirmPassword"
-                      value={passwordData.confirmPassword}
-                      onChange={handlePasswordChange}
-                      className="w-full p-2 text-black bg-white rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
-                    />
-                  </div>
-                  <div className="flex justify-center space-x-4">
-                    <button
-                      onClick={handlePasswordUpdate}
-                      className="px-4 py-2 bg-slate-900 hover:bg-blue-800 rounded text-white font-semibold"
-                    >
-                      Update Password
-                    </button>
-                    <button
-                      onClick={() => setIsChangingPassword(false)}
-                      className="px-4 py-2 bg-gray-500 hover:bg-gray-600 rounded text-white font-semibold"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </div>
     </PageWrapper>
-    );
-  };
-  
-  export default ProfilePage;
+  );
+};
+
+export default ProfilePage;

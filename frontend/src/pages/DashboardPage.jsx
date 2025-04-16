@@ -1,24 +1,58 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import PageWrapper from "../components/PageWrapper";
 import StockChart from "../components/StockChart";
 import { Switch, FormControlLabel } from "@mui/material";
 
 const DashboardPage = () => {
   // ========== 1) UI State ==========
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState("AI Insights");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [stockData, setStockData] = useState(null); // When null, show only the search view
-  const [error, setError] = useState("");
-  const [message, setMessage] = useState("");
 
-  // Toggles for sections (only visible in full dashboard view)
+  // Left-column stock search
+  const [searchQuery, setSearchQuery] = useState("");
+  // AI chat input
+  const [aiSearchQuery, setAiSearchQuery] = useState("");
+  // The main loaded stock data
+  const [stockData, setStockData] = useState(null);
+  // Watchlist / toggles
+  const [isVisible, setIsVisible] = useState(false);
+  const [isInWatchlist, setIsInWatchlist] = useState(false);
   const [showMetrics, setShowMetrics] = useState(true);
   const [showChart, setShowChart] = useState(true);
   const [showTabs, setShowTabs] = useState(true);
 
+  // Error, message, AI response, loading
+  const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
+  const [aiResponse, setAiResponse] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
   // ========== 2) Draggable left column (Chat) state ==========
-  const [leftWidth, setLeftWidth] = useState(30); // default 30% width
+  const [leftWidth, setLeftWidth] = useState(30);
   const dividerRef = useRef(null);
+
+  useEffect(() => {
+    // If we already have a symbol, check if it's in watchlist
+    if (stockData?.symbol) {
+      fetchWatchlistStatus(stockData.symbol);
+    }
+  }, [stockData]);
+
+  // If the URL has ?stock=SYMBOL, we auto-fetch on mount
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const stock = params.get("stock");
+    if (stock && stock.trim() !== "" && stock !== "undefined") {
+      setSearchQuery(stock);
+      getStockData(stock).then((val) => {
+        setStockData(val);
+      });
+    } else {
+      setSearchQuery("");
+      setStockData(null);
+    }
+  }, [location]);
 
   const handleMouseDown = (e) => {
     e.preventDefault();
@@ -38,7 +72,151 @@ const DashboardPage = () => {
     document.removeEventListener("mouseup", handleMouseUp);
   };
 
-  // ========== 3) Backend Fetch Logic ==========
+  // ========== Watchlist Logic ==========
+  const fetchWatchlistStatus = async (stockSymbol) => {
+    try {
+      const response = await fetch("/watchlist", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch watchlist");
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        const isStockInWatchlist = data.data.some(
+          (item) => item.asset_symbol === stockSymbol
+        );
+        setIsInWatchlist(isStockInWatchlist);
+      } else {
+        throw new Error(data.message || "Failed to fetch watchlist");
+      }
+    } catch (error) {
+      console.error("Fetch Watchlist Error:", error);
+      setError("Failed to fetch watchlist");
+    }
+  };
+
+  const toggleWatchlist = async () => {
+    if (!stockData?.symbol) {
+      setError("No stock selected to add to watchlist");
+      return;
+    }
+
+    setError("");
+    try {
+      const method = isInWatchlist ? "DELETE" : "POST";
+      const body = isInWatchlist
+        ? { asset_symbol: stockData.symbol }
+        : { asset_symbol: stockData.symbol, name: stockData.name };
+
+      const response = await fetch("/watchlist", {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(body),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setIsInWatchlist(!isInWatchlist);
+      } else {
+        setError(data.message || "Failed to update watchlist");
+      }
+    } catch (error) {
+      console.error("Toggle Watchlist Error:", error);
+      setError("Failed to connect to the server");
+    }
+  };
+
+  // ========== AI Chat Logic ==========
+  const handleAiSearch = async (userInput) => {
+    setIsLoading(true);
+    setError("");
+    try {
+      // Step 1: Extract Ticker
+      const tickerResponse = await fetch("/ai/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_message: `Extract the most relevant stock ticker symbol for the company mentioned in this query: "${userInput}". Respond only with "Ticker: [SYMBOL]" where [SYMBOL] is the stock ticker.`,
+        }),
+      });
+
+      if (!tickerResponse.ok) {
+        throw new Error("Failed to fetch AI ticker response");
+      }
+
+      const tickerData = await tickerResponse.json();
+      const extractedSymbol = extractStockSymbol(tickerData.data);
+
+      if (extractedSymbol) {
+        const isValid = await validateStockSymbol(extractedSymbol);
+        if (isValid) {
+          setSearchQuery(extractedSymbol);
+          const stockInfo = await getStockData(extractedSymbol);
+          setStockData(stockInfo);
+        } else {
+          setError(`Invalid or delisted stock symbol: ${extractedSymbol}`);
+        }
+      } else {
+        setError("No valid stock symbol found in AI response.");
+      }
+
+      // Step 2: Generate detailed AI insights
+      const insightsResponse = await fetch("/ai/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_message: `Provide a detailed response to this query: "${userInput}".`,
+        }),
+      });
+
+      if (!insightsResponse.ok) {
+        throw new Error("Failed to fetch AI insights response");
+      }
+
+      const insightsData = await insightsResponse.json();
+      // Place the AI response only in the chatbox
+      setAiResponse(insightsData.data);
+    } catch (error) {
+      console.error("AI Search Error:", error);
+      setError("Failed to connect to the AI service.");
+    } finally {
+      setAiSearchQuery("");
+      setIsLoading(false);
+    }
+  };
+
+  const validateStockSymbol = async (symbol) => {
+    try {
+      const response = await fetch(
+        `http://localhost:8080/stock/${symbol}/info`
+      );
+      return response.ok;
+    } catch (error) {
+      console.error("Stock Symbol Validation Error:", error);
+      return false;
+    }
+  };
+
+  const extractStockSymbol = (aiText) => {
+    const match = aiText.match(/Ticker:\s*([A-Z]{1,5})/);
+    return match ? match[1] : null;
+  };
+
+  // ========== 3) Main getStockData ==========
   const parseDate = (dateStr) => {
     const cleanedDateStr = dateStr.replace(/^[A-Za-z]{3},\s/, "");
     const dateObj = new Date(cleanedDateStr);
@@ -135,7 +313,6 @@ const DashboardPage = () => {
         },
       };
 
-      // Return final data on success
       return finalData;
     } catch (err) {
       console.error(err);
@@ -144,14 +321,13 @@ const DashboardPage = () => {
     }
   };
 
-  // ========== 4) MetricCard component ==========
+  // ========== 4) MetricCard ==========
   const MetricCard = ({ label, value, tooltip }) => (
     <div className="bg-slate-950 p-2 rounded-lg shadow-sm">
-      {/* Label & Icon */}
       <div className="flex items-center space-x-1 text-xs text-gray-300">
         <span>{label}</span>
         {tooltip && (
-          <div className="relative group flex  items-center">
+          <div className="relative group flex items-center">
             <svg
               data-slot="icon"
               fill="#f5f5f5"
@@ -166,20 +342,17 @@ const DashboardPage = () => {
                 d="M15 8A7 7 0 1 1 1 8a7 7 0 0 1 14 0ZM9 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM6.75 8a.75.75 0 0 0 0 1.5h.75v1.75a.75.75 0 0 0 1.5 0v-2.5A.75.75 0 0 0 8.25 8h-1.5Z"
               />
             </svg>
-            {/* Tooltip: hidden by default; displayed on hover */}
             <div className="absolute hidden group-hover:block top-full left-1/2 -translate-x-1/2 mt-1 w-48 bg-[#0B1120] text-white p-2 rounded-md text-xs shadow-lg z-10">
               {tooltip}
             </div>
           </div>
         )}
       </div>
-
-      {/* Value text */}
       <div className="text-white font-semibold text-sm mt-1">{value}</div>
     </div>
   );
 
-  // ========== 5) No stock data: show search ==========
+  // ========== 5) If NO stockData => big center search ==========
   if (!stockData) {
     return (
       <PageWrapper>
@@ -189,7 +362,9 @@ const DashboardPage = () => {
             type="text"
             textAlign="center"
             style={{ width: "300px", height: "50px", fontSize: "18px" }}
-            className="w-full bg-slate-950 text-white px-4 py-2 border border-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded text-sm"
+            className="w-full bg-slate-950 text-white px-4 py-2 border border-slate-600
+                       focus:outline-none focus:ring-2 focus:ring-blue-500 
+                       rounded text-sm"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyUp={async (evt) => {
@@ -197,7 +372,7 @@ const DashboardPage = () => {
                 const data = await getStockData(searchQuery);
                 if (data) {
                   setStockData(data);
-                  setSearchQuery(""); // Clear search on success
+                  setSearchQuery("");
                 }
               }
             }}
@@ -209,7 +384,7 @@ const DashboardPage = () => {
     );
   }
 
-  // ========== 6) Render full dashboard ==========
+  // ========== 6) Full Dashboard ==========
   return (
     <PageWrapper>
       <div className="pt-28"></div>
@@ -220,17 +395,20 @@ const DashboardPage = () => {
           height: "calc(100vh - 8rem)",
         }}
       >
-        {/* LEFT COLUMN (Search + Chat) */}
+        {/* LEFT COLUMN (Search + AI Chat) */}
         <div
           className="flex flex-col h-full border-r border-slate-700 md:p-4"
           style={{ width: `${leftWidth}%`, minWidth: "220px" }}
         >
-          {/* Search bar above chat */}
+          {/* Smaller stock search (top) */}
           <div className="bg-slate-950 rounded-xl p-4 mb-4 shadow-md">
             <input
               type="text"
               placeholder="Search for a stock"
-              className="w-full bg-slate-900 text-white px-4 py-2 border border-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded text-sm"
+              className="w-full bg-slate-900 text-white px-4 py-2 border 
+                         border-slate-600 focus:outline-none 
+                         focus:ring-2 focus:ring-blue-500 
+                         rounded text-sm"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyUp={async (evt) => {
@@ -238,7 +416,7 @@ const DashboardPage = () => {
                   const data = await getStockData(searchQuery);
                   if (data) {
                     setStockData(data);
-                    setSearchQuery(""); // Clear search on success
+                    setSearchQuery("");
                   }
                 }
               }}
@@ -249,19 +427,21 @@ const DashboardPage = () => {
             )}
           </div>
 
-          {/* Chat box */}
+          {/* AI Chat box */}
           <div className="bg-slate-950 rounded-xl p-4 flex flex-col h-full shadow-md">
             <div className="mb-4 text-gray-100 font-semibold text-lg">
               AI Chat
             </div>
             {/* Chat log */}
-            <div className="flex-grow overflow-y-auto p-2 mb-4 rounded-lg text-gray-200 space-y-1">
+            <div
+              className="flex-grow overflow-y-auto p-2 mb-4 
+                            rounded-lg text-gray-200 space-y-2"
+            >
               <p>
-                <strong className="text-gray-100">User:</strong> Hello, AI!
-              </p>
-              <p>
-                <strong className="text-gray-100">AI:</strong> Hi there! How can
-                I help you today?
+                <strong className="text-gray-100">AI:</strong>{" "}
+                {isLoading
+                  ? "Loading AI response..."
+                  : aiResponse || "Ask a question to get AI insights."}
               </p>
             </div>
             {/* Chat input */}
@@ -269,10 +449,28 @@ const DashboardPage = () => {
               <input
                 type="text"
                 placeholder="Ask me anything"
-                className="flex-1 bg-slate-900 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="flex-1 bg-slate-900 text-white px-4 py-2 
+                           rounded-lg focus:outline-none 
+                           focus:ring-2 focus:ring-blue-500"
+                value={aiSearchQuery}
+                onChange={(e) => setAiSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !isLoading) {
+                    handleAiSearch(aiSearchQuery);
+                  }
+                }}
               />
-              <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                Send
+              <button
+                onClick={() => handleAiSearch(aiSearchQuery)}
+                className={`bg-blue-600 text-white px-4 py-2 
+                           rounded-lg hover:bg-blue-700 
+                           focus:outline-none focus:ring-2 
+                           focus:ring-blue-500 ${
+                             isLoading ? "opacity-50 cursor-not-allowed" : ""
+                           }`}
+                disabled={isLoading}
+              >
+                {isLoading ? "Loading..." : "Send"}
               </button>
             </div>
           </div>
@@ -290,11 +488,10 @@ const DashboardPage = () => {
           className="flex flex-col h-full overflow-auto space-y-4 md:p-4"
           style={{ width: `${100 - leftWidth}%` }}
         >
-          {/* Stock Header + Toggles */}
+          {/* Stock Header + Toggles + Watchlist */}
           <div className="bg-slate-950 rounded-xl p-4 shadow-md">
-            {/* 1) Use flex-wrap here so toggles never escape the card */}
             <div className="flex flex-wrap items-center justify-between gap-y-2">
-              {/* Stock info on the left */}
+              {/* Stock info */}
               <div>
                 <h1 className="text-xl font-bold text-white mb-2">
                   {stockData.name} ({stockData.symbol})
@@ -313,12 +510,10 @@ const DashboardPage = () => {
                 </div>
               </div>
 
-              {/* Toggles on the right - they will wrap on small screens */}
-              <div className="flex gap-8 items-center">
+              {/* Toggles */}
+              <div className="flex gap-4 items-center">
                 <FormControlLabel
-                  label={
-                    <span style={{ fontSize: "0.8rem" }}>{"Show Tabs"}</span>
-                  }
+                  label={<span style={{ fontSize: "0.8rem" }}>Show Tabs</span>}
                   labelPlacement="end"
                   control={
                     <Switch
@@ -334,9 +529,7 @@ const DashboardPage = () => {
                   }
                 />
                 <FormControlLabel
-                  label={
-                    <span style={{ fontSize: "0.8rem" }}>{"Metrics"}</span>
-                  }
+                  label={<span style={{ fontSize: "0.8rem" }}>Metrics</span>}
                   labelPlacement="end"
                   control={
                     <Switch
@@ -351,7 +544,7 @@ const DashboardPage = () => {
                   }
                 />
                 <FormControlLabel
-                  label={<span style={{ fontSize: "0.8rem" }}>{"Chart"}</span>}
+                  label={<span style={{ fontSize: "0.8rem" }}>Chart</span>}
                   labelPlacement="end"
                   control={
                     <Switch
@@ -365,6 +558,23 @@ const DashboardPage = () => {
                     />
                   }
                 />
+              </div>
+
+              {/* Watchlist Star */}
+              <div>
+                <button
+                  onClick={toggleWatchlist}
+                  className="p-2"
+                  title={
+                    isInWatchlist ? "Remove from Watchlist" : "Add to Watchlist"
+                  }
+                >
+                  <i
+                    className={`fa${
+                      isInWatchlist ? "s" : "r"
+                    } fa-star text-yellow-500 text-2xl`}
+                  ></i>
+                </button>
               </div>
             </div>
           </div>
@@ -440,7 +650,7 @@ const DashboardPage = () => {
             </div>
           )}
 
-          {/* Tabs */}
+          {/* Tabs - in a separate card, blank content */}
           {showTabs && (
             <div className="bg-slate-950 rounded-xl p-4 shadow-md">
               <div className="flex space-x-2 border-b border-slate-600 pb-2 mb-4 justify-center">
@@ -464,28 +674,13 @@ const DashboardPage = () => {
                 ))}
               </div>
               <div className="text-gray-300">
-                {activeTab === "AI Insights" && (
-                  <p>
-                    Apple Inc. (AAPL) remains a strong long-term investment...
-                  </p>
-                )}
+                {/* Tab content is blank now */}
+                {activeTab === "AI Insights" && <p>(No AI response here)</p>}
                 {activeTab === "Company Background" && (
-                  <p>
-                    Apple was founded in 1976, headquartered in Cupertino...
-                  </p>
+                  <p>(Blank tab content)</p>
                 )}
-                {activeTab === "Fundamentals" && (
-                  <p>
-                    Fundamentals typically include P/E ratio, EPS, revenue
-                    growth...
-                  </p>
-                )}
-                {activeTab === "Technicals" && (
-                  <p>
-                    Technical analysis involves analyzing price trends and
-                    volume...
-                  </p>
-                )}
+                {activeTab === "Fundamentals" && <p>(Blank tab content)</p>}
+                {activeTab === "Technicals" && <p>(Blank tab content)</p>}
               </div>
             </div>
           )}

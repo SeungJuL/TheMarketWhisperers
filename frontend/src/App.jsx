@@ -13,36 +13,27 @@ function App() {
   const [loading, setLoading] = useState(true); // Add loading state
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    console.log("Token retrieved from localStorage:", token); // Debugging
-
-    if (token) {
-      fetch("http://127.0.0.1:8080/user/profile", {
-        headers: { Authorization: `Bearer ${token}` },
+    fetch("/user/profile", { // Use relative path
+      credentials: "include", // Ensure cookies are sent with the request
+      headers: {
+        "Content-Type": "application/json", // Explicitly set content type
+      },
+    })
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error("Failed to fetch user profile");
+        }
+        return res.json();
       })
-        .then((res) => {
-          console.log("Profile API Response:", res); // Debugging
-          if (!res.ok) {
-            throw new Error("Failed to fetch user profile");
-          }
-          return res.json();
-        })
-        .then((data) => {
-          console.log("Profile API Data:", data); // Debugging
-          if (data.success) {
-            setUser(data.data); // Update user state with backend response
-          } else {
-            localStorage.removeItem("token"); // Remove invalid token
-          }
-        })
-        .catch((err) => {
-          console.error("Error fetching profile:", err); // Debugging
-          localStorage.removeItem("token"); // Handle fetch errors
-        })
-        .finally(() => setLoading(false)); // Ensure loading state is updated
-    } else {
-      setLoading(false); // No token, stop loading
-    }
+      .then((data) => {
+        if (data.success) {
+          setUser(data.data); // Update user state with backend response
+        }
+      })
+      .catch((err) => {
+        console.error("Error fetching profile:", err);
+      })
+      .finally(() => setLoading(false)); // Ensure loading state is updated
   }, []);
 
   if (loading) {
