@@ -76,8 +76,17 @@ const SignupPage = ({ setUser }) => {
         <div
           className="absolute inset-0 bg-cover bg-center"
           style={{
-            backgroundImage: 'url("/backgroundhome.png")',
-            filter: "brightness(0.5)",
+            backgroundImage: `
+        linear-gradient(
+          rgba(15, 23, 42, 0.85), 
+          rgba(15, 23, 42, 0.85)
+        ), 
+        url("/backgroundhome.png")
+      `,
+            backgroundBlendMode: "overlay",
+            // Optionally, you can remove the filter brightness
+            // if the gradient already darkens it enough:
+            // filter: "brightness(0.4)",
           }}
         />
         {/* Content Container */}

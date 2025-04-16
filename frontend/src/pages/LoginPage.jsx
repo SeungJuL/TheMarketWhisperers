@@ -22,7 +22,6 @@ const LoginPage = ({ setUser }) => {
         body: JSON.stringify({ email, password }),
         credentials: "include", // Ensure cookies are sent with the request
       });
-
       if (response.ok) {
         const userProfile = await fetchUserProfile();
         setUser(userProfile); // Update user state with profile data
@@ -46,8 +45,17 @@ const LoginPage = ({ setUser }) => {
         <div
           className="absolute inset-0 bg-cover bg-center"
           style={{
-            backgroundImage: 'url("/backgroundhome.png")',
-            filter: "brightness(0.5)", // Dims the background
+            backgroundImage: `
+        linear-gradient(
+          rgba(15, 23, 42, 0.85), 
+          rgba(15, 23, 42, 0.85)
+        ), 
+        url("/backgroundhome.png")
+      `,
+            backgroundBlendMode: "overlay",
+            // Optionally, you can remove the filter brightness
+            // if the gradient already darkens it enough:
+            // filter: "brightness(0.4)",
           }}
         />
         {/* Content container */}
@@ -101,7 +109,6 @@ const LoginPage = ({ setUser }) => {
                         8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"
                     />
                   </svg>
-
                 </div>
               </div>
 
