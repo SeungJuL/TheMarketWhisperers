@@ -117,7 +117,8 @@ const DashboardPage = () => {
 
   const handleAiSearch = async (userInput) => {
     try {
-      const response = await fetch("/ai/", {
+      // Step 1: Extract the stock ticker symbol
+      const tickerResponse = await fetch("/ai/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -127,15 +128,13 @@ const DashboardPage = () => {
         }),
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch AI response");
+      if (!tickerResponse.ok) {
+        throw new Error("Failed to fetch AI ticker response");
       }
 
-      const data = await response.json();
-      setAiResponse(data.data); // Update AI Insights tab with response
+      const tickerData = await tickerResponse.json();
+      const extractedSymbol = extractStockSymbol(tickerData.data);
 
-      // Extract stock ticker symbol from AI response
-      const extractedSymbol = extractStockSymbol(data.data);
       if (extractedSymbol) {
         const isValid = await validateStockSymbol(extractedSymbol);
         if (isValid) {
@@ -148,6 +147,24 @@ const DashboardPage = () => {
       } else {
         setError("No valid stock symbol found in AI response.");
       }
+
+      // Step 2: Generate detailed AI insights
+      const insightsResponse = await fetch("/ai/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_message: `Provide a detailed response to this query: "${userInput}".`,
+        }),
+      });
+
+      if (!insightsResponse.ok) {
+        throw new Error("Failed to fetch AI insights response");
+      }
+
+      const insightsData = await insightsResponse.json();
+      setAiResponse(insightsData.data); // Update AI Insights tab with detailed response
     } catch (error) {
       console.error("AI Search Error:", error);
       setError("Failed to connect to the AI service.");
