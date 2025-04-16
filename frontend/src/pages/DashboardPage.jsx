@@ -1,6 +1,7 @@
 import React, { useState, useRef } from "react";
 import PageWrapper from "../components/PageWrapper";
 import StockChart from "../components/StockChart";
+import { Switch, FormControlLabel } from "@mui/material";
 
 const DashboardPage = () => {
   // ========== 1) UI State ==========
@@ -16,7 +17,7 @@ const DashboardPage = () => {
   const [showTabs, setShowTabs] = useState(true);
 
   // ========== 2) Draggable left column (Chat) state ==========
-  const [leftWidth, setLeftWidth] = useState(30); // default 30% width for left column
+  const [leftWidth, setLeftWidth] = useState(30); // default 30% width
   const dividerRef = useRef(null);
 
   const handleMouseDown = (e) => {
@@ -134,7 +135,7 @@ const DashboardPage = () => {
         },
       };
 
-      setMessage("Stock fetched successfully!");
+      // Return final data on success
       return finalData;
     } catch (err) {
       console.error(err);
@@ -143,42 +144,42 @@ const DashboardPage = () => {
     }
   };
 
-  // ========== 4) MaterialToggle and MetricCard components ==========
-  const MaterialToggle = ({ label, checked, onChange }) => {
-    return (
-      <label className="flex items-center space-x-2 text-slate-300 text-sm">
-        <span>{label}</span>
-        <div className="relative inline-flex items-center cursor-pointer">
-          <input
-            type="checkbox"
-            className="sr-only peer"
-            checked={checked}
-            onChange={onChange}
-          />
-          <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-[1px] after:left-[1px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full peer-checked:after:border-white" />
-        </div>
-      </label>
-    );
-  };
-
+  // ========== 4) MetricCard component ==========
   const MetricCard = ({ label, value, tooltip }) => (
-    <div className="bg-slate-950 p-4 rounded-lg relative group shadow-sm">
-      <div className="flex items-center mb-2">
-        <span className="text-gray-300 text-sm">{label}</span>
+    <div className="bg-slate-950 p-2 rounded-lg shadow-sm">
+      {/* Label & Icon */}
+      <div className="flex items-center space-x-1 text-xs text-gray-300">
+        <span>{label}</span>
         {tooltip && (
-          <div className="ml-2">
-            <span className="text-gray-400 cursor-help">ⓘ</span>
-            <div className="absolute hidden group-hover:block bg-[#0B1120] text-white p-2 rounded-md text-xs z-10 w-48 shadow-lg">
+          <div className="relative group flex  items-center">
+            <svg
+              data-slot="icon"
+              fill="#f5f5f5"
+              viewBox="0 0 16 16"
+              className="h-3 w-3 text-gray-400 cursor-help"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true"
+            >
+              <path
+                clipRule="evenodd"
+                fillRule="evenodd"
+                d="M15 8A7 7 0 1 1 1 8a7 7 0 0 1 14 0ZM9 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM6.75 8a.75.75 0 0 0 0 1.5h.75v1.75a.75.75 0 0 0 1.5 0v-2.5A.75.75 0 0 0 8.25 8h-1.5Z"
+              />
+            </svg>
+            {/* Tooltip: hidden by default; displayed on hover */}
+            <div className="absolute hidden group-hover:block top-full left-1/2 -translate-x-1/2 mt-1 w-48 bg-[#0B1120] text-white p-2 rounded-md text-xs shadow-lg z-10">
               {tooltip}
             </div>
           </div>
         )}
       </div>
-      <div className="text-white font-semibold">{value}</div>
+
+      {/* Value text */}
+      <div className="text-white font-semibold text-sm mt-1">{value}</div>
     </div>
   );
 
-  // ========== 5) Render: if no stockData, then show only the centered search component ==========
+  // ========== 5) No stock data: show search ==========
   if (!stockData) {
     return (
       <PageWrapper>
@@ -194,7 +195,10 @@ const DashboardPage = () => {
             onKeyUp={async (evt) => {
               if (evt.key === "Enter") {
                 const data = await getStockData(searchQuery);
-                if (data) setStockData(data);
+                if (data) {
+                  setStockData(data);
+                  setSearchQuery(""); // Clear search on success
+                }
               }
             }}
           />
@@ -205,7 +209,7 @@ const DashboardPage = () => {
     );
   }
 
-  // ========== 6) Render full dashboard (when stockData exists) ==========
+  // ========== 6) Render full dashboard ==========
   return (
     <PageWrapper>
       <div className="pt-28"></div>
@@ -216,11 +220,36 @@ const DashboardPage = () => {
           height: "calc(100vh - 8rem)",
         }}
       >
-        {/* LEFT COLUMN (Chat area) */}
+        {/* LEFT COLUMN (Search + Chat) */}
         <div
-          className="flex flex-col h-full border-r border-slate-700"
-          style={{ width: `${leftWidth}%`, minWidth: "200px" }}
+          className="flex flex-col h-full border-r border-slate-700 md:p-4"
+          style={{ width: `${leftWidth}%`, minWidth: "220px" }}
         >
+          {/* Search bar above chat */}
+          <div className="bg-slate-950 rounded-xl p-4 mb-4 shadow-md">
+            <input
+              type="text"
+              placeholder="Search for a stock"
+              className="w-full bg-slate-900 text-white px-4 py-2 border border-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded text-sm"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyUp={async (evt) => {
+                if (evt.key === "Enter") {
+                  const data = await getStockData(searchQuery);
+                  if (data) {
+                    setStockData(data);
+                    setSearchQuery(""); // Clear search on success
+                  }
+                }
+              }}
+            />
+            {error && <p className="mt-2 text-red-500 text-sm">{error}</p>}
+            {message && (
+              <p className="mt-2 text-green-500 text-sm">{message}</p>
+            )}
+          </div>
+
+          {/* Chat box */}
           <div className="bg-slate-950 rounded-xl p-4 flex flex-col h-full shadow-md">
             <div className="mb-4 text-gray-100 font-semibold text-lg">
               AI Chat
@@ -258,68 +287,92 @@ const DashboardPage = () => {
 
         {/* RIGHT COLUMN */}
         <div
-          className="flex flex-col h-full overflow-auto space-y-4 p-2 md:p-8"
+          className="flex flex-col h-full overflow-auto space-y-4 md:p-4"
           style={{ width: `${100 - leftWidth}%` }}
         >
-          {/* Row: search bar & toggles */}
-          <div className="bg-slate-950 rounded-xl p-4 shadow-md flex items-center justify-between">
-            {/* Left side: Search input */}
-            <input
-              type="text"
-              placeholder="Search for a stock"
-              className="flex-1 max-w-md bg-slate-900 text-white px-4 py-2 border border-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded mr-4"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyUp={async (evt) => {
-                if (evt.key === "Enter") {
-                  const data = await getStockData(searchQuery);
-                  if (data) setStockData(data);
-                }
-              }}
-            />
-            {/* Right side: toggles */}
-            <div className="flex gap-4 items-center">
-              <MaterialToggle
-                label="Show Tabs"
-                checked={showTabs}
-                onChange={() => setShowTabs((prev) => !prev)}
-              />
-              <MaterialToggle
-                label="Metrics"
-                checked={showMetrics}
-                onChange={() => setShowMetrics((prev) => !prev)}
-              />
-              <MaterialToggle
-                label="Chart"
-                checked={showChart}
-                onChange={() => setShowChart((prev) => !prev)}
-              />
-            </div>
-          </div>
-
-          {/* Stock Header */}
+          {/* Stock Header + Toggles */}
           <div className="bg-slate-950 rounded-xl p-4 shadow-md">
-            <h1 className="text-2xl md:text-2xl font-bold text-white mb-2">
-              {stockData.name} ({stockData.symbol})
-            </h1>
-            <div className="flex items-center space-x-2">
-              <span className="text-xl md:text-xl text-blue-400">
-                ${parseFloat(stockData.price).toFixed(2)}
-              </span>
-              <span
-                className={
-                  stockData.change >= 0 ? "text-green-500" : "text-red-500"
-                }
-              >
-                ({parseFloat(stockData.change).toFixed(2)}%)
-              </span>
+            {/* 1) Use flex-wrap here so toggles never escape the card */}
+            <div className="flex flex-wrap items-center justify-between gap-y-2">
+              {/* Stock info on the left */}
+              <div>
+                <h1 className="text-xl font-bold text-white mb-2">
+                  {stockData.name} ({stockData.symbol})
+                </h1>
+                <div className="flex items-center space-x-2">
+                  <span className="text-xl text-blue-400">
+                    ${parseFloat(stockData.price).toFixed(2)}
+                  </span>
+                  <span
+                    className={
+                      stockData.change >= 0 ? "text-green-500" : "text-red-500"
+                    }
+                  >
+                    ({parseFloat(stockData.change).toFixed(2)}%)
+                  </span>
+                </div>
+              </div>
+
+              {/* Toggles on the right - they will wrap on small screens */}
+              <div className="flex gap-8 items-center">
+                <FormControlLabel
+                  label={
+                    <span style={{ fontSize: "0.8rem" }}>{"Show Tabs"}</span>
+                  }
+                  labelPlacement="end"
+                  control={
+                    <Switch
+                      checked={showTabs}
+                      onChange={() => setShowTabs((prev) => !prev)}
+                      color="primary"
+                      sx={{
+                        "& .MuiSwitch-track": {
+                          backgroundColor: "#E2E8F0",
+                        },
+                      }}
+                    />
+                  }
+                />
+                <FormControlLabel
+                  label={
+                    <span style={{ fontSize: "0.8rem" }}>{"Metrics"}</span>
+                  }
+                  labelPlacement="end"
+                  control={
+                    <Switch
+                      checked={showMetrics}
+                      onChange={() => setShowMetrics((prev) => !prev)}
+                      sx={{
+                        "& .MuiSwitch-track": {
+                          backgroundColor: "#E2E8F0",
+                        },
+                      }}
+                    />
+                  }
+                />
+                <FormControlLabel
+                  label={<span style={{ fontSize: "0.8rem" }}>{"Chart"}</span>}
+                  labelPlacement="end"
+                  control={
+                    <Switch
+                      checked={showChart}
+                      onChange={() => setShowChart((prev) => !prev)}
+                      sx={{
+                        "& .MuiSwitch-track": {
+                          backgroundColor: "#E2E8F0",
+                        },
+                      }}
+                    />
+                  }
+                />
+              </div>
             </div>
           </div>
 
           {/* Metrics Grid */}
           {showMetrics && (
-            <div className="bg-slate-950 rounded-xl p-4 shadow-md">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="bg-slate-950 rounded-xl p-2 shadow-md">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                 <MetricCard
                   label="52 Wk High/Low"
                   value={stockData.metrics.weekHighLow}

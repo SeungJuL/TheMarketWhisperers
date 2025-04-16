@@ -12,6 +12,9 @@ import {
   Legend,
 } from "chart.js";
 
+// 1) Import Switch and optionally FormControlLabel
+import { Switch, FormControlLabel } from "@mui/material";
+
 Chart.register(
   LineElement,
   LineController,
@@ -33,17 +36,15 @@ const StockChart = ({ historicalInfo }) => {
   const canvasRef = useRef(null);
   const chartRef = useRef(null);
 
-  // Effect to handle chart rendering
+  // Chart initialization
   useEffect(() => {
     if (chartRef.current) {
-      chartRef.current.destroy(); // Prevent duplicate canvas errors
+      chartRef.current.destroy();
     }
 
     const ctx = canvasRef.current.getContext("2d");
 
-    // Prepare the datasets based on toggles
     const datasets = [];
-
     if (showClose) {
       datasets.push({
         label: "Close Price",
@@ -55,7 +56,6 @@ const StockChart = ({ historicalInfo }) => {
         pointRadius: 2,
       });
     }
-
     if (showHigh) {
       datasets.push({
         label: "High Price",
@@ -67,7 +67,6 @@ const StockChart = ({ historicalInfo }) => {
         pointRadius: 2,
       });
     }
-
     if (showLow) {
       datasets.push({
         label: "Low Price",
@@ -80,7 +79,6 @@ const StockChart = ({ historicalInfo }) => {
       });
     }
 
-    // Initialize the chart with the dynamic datasets
     chartRef.current = new Chart(ctx, {
       type: "line",
       data: {
@@ -111,7 +109,7 @@ const StockChart = ({ historicalInfo }) => {
             display: true,
             text: "Stock Price History",
             font: {
-              size: 18,
+              size: 16,
               weight: "bold",
             },
             color: "#fff",
@@ -137,40 +135,58 @@ const StockChart = ({ historicalInfo }) => {
 
   return (
     <div className="w-full">
-      {/* Chart container with a fixed aspect ratio via h-96 */}
-      <div className="relative w-full h-72 md:h-96 bg-slate-950">
+      {/* Chart container */}
+      <div className="relative w-full h-48 md:h-64 bg-slate-950">
         <canvas ref={canvasRef} className="w-full h-full" />
       </div>
 
-      {/* Checkbox Section Below the Graph */}
-      <div className="flex justify-center space-x-4 mt-4">
-        <div className="flex items-center">
-          <input
-            type="checkbox"
-            checked={showClose}
-            onChange={() => setShowClose((prev) => !prev)}
-            className="mr-2"
-          />
-          <label className="text-white">Close Price</label>
-        </div>
-        <div className="flex items-center">
-          <input
-            type="checkbox"
-            checked={showHigh}
-            onChange={() => setShowHigh((prev) => !prev)}
-            className="mr-2"
-          />
-          <label className="text-white">High Price</label>
-        </div>
-        <div className="flex items-center">
-          <input
-            type="checkbox"
-            checked={showLow}
-            onChange={() => setShowLow((prev) => !prev)}
-            className="mr-2"
-          />
-          <label className="text-white">Low Price</label>
-        </div>
+      {/* Toggle Section */}
+      <div className="flex justify-center items-center space-x-8 mt-2">
+        {/* 2) Use FormControlLabel around Switch for an integrated label */}
+        <FormControlLabel
+          label={<span style={{ fontSize: "0.8rem" }}>{"Close Price"}</span>}
+          control={
+            <Switch
+              checked={showClose}
+              onChange={() => setShowClose(!showClose)}
+              sx={{
+                "& .MuiSwitch-track": {
+                  backgroundColor: "#E2E8F0",
+                },
+              }}
+            />
+          }
+        />
+
+        <FormControlLabel
+          label={<span style={{ fontSize: "0.8rem" }}>{"High Price"}</span>}
+          control={
+            <Switch
+              checked={showHigh}
+              onChange={() => setShowHigh(!showHigh)}
+              sx={{
+                "& .MuiSwitch-track": {
+                  backgroundColor: "#E2E8F0",
+                },
+              }}
+            />
+          }
+        />
+
+        <FormControlLabel
+          label={<span style={{ fontSize: "0.8rem" }}>{"Low Price"}</span>}
+          control={
+            <Switch
+              checked={showLow}
+              onChange={() => setShowLow(!showLow)}
+              sx={{
+                "& .MuiSwitch-track": {
+                  backgroundColor: "#E2E8F0",
+                },
+              }}
+            />
+          }
+        />
       </div>
     </div>
   );
