@@ -10,14 +10,14 @@ export const login = async (credentials) => {
 };
 
 export const logout = async () => {
-    await fetch('/api/logout', {
+    await fetch('http://localhost:8080/api/logout', {
         method: 'POST',
         credentials: 'include', // Ensure cookies are sent with the request
     });
 };
 
 export const checkSession = async () => {
-    const response = await fetch('/api/session', {
+    const response = await fetch('http://localhost:8080/api/session', {
         method: 'GET',
         credentials: 'include', // Ensure cookies are sent with the request
     });

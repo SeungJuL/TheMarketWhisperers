@@ -75,7 +75,7 @@ const DashboardPage = () => {
   // ========== Watchlist Logic ==========
   const fetchWatchlistStatus = async (stockSymbol) => {
     try {
-      const response = await fetch("/watchlist", {
+      const response = await fetch("http://localhost:8080/watchlist", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -115,7 +115,7 @@ const DashboardPage = () => {
         ? { asset_symbol: stockData.symbol }
         : { asset_symbol: stockData.symbol, name: stockData.name };
 
-      const response = await fetch("/watchlist", {
+      const response = await fetch("http://localhost:8080/watchlist", {
         method,
         headers: {
           "Content-Type": "application/json",
@@ -142,7 +142,7 @@ const DashboardPage = () => {
     setError("");
     try {
       // Step 1: Extract Ticker
-      const tickerResponse = await fetch("/ai/", {
+      const tickerResponse = await fetch("http://localhost:8080/ai/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -173,7 +173,7 @@ const DashboardPage = () => {
       }
 
       // Step 2: Generate detailed AI insights
-      const insightsResponse = await fetch("/ai/", {
+      const insightsResponse = await fetch("http://localhost:8080/ai/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

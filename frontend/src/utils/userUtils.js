@@ -1,6 +1,6 @@
 export const fetchUserProfile = async () => {
   try {
-    const response = await fetch("/user/profile", {
+    const response = await fetch("http://localhost:8080/user/profile", {
       credentials: "include",
       headers: { "Content-Type": "application/json" },
     });

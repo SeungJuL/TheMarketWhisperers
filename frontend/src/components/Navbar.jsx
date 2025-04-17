@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 const Navbar = ({ user, setUser }) => {
   const handleLogout = async () => {
     try {
-      const response = await fetch("/user/logout", { // Use relative path
+      const response = await fetch("http://localhost:8080/user/logout", { // Use relative path
         method: "POST",
         credentials: "include", // Ensure cookies are sent with the request
       });
