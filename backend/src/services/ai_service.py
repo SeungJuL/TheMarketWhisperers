@@ -12,6 +12,13 @@ class AIService:
         chat_completion = self.client.chat.completions.create(
             messages = [
                 {
+                    "role": "system",
+                    "content": (
+                        "You are a helpful AI assistant specialized in finance and stock market analysis. "
+                        "When users ask about a stock, you give clear and beginner-friendly explanations using real examples. "
+                    )
+                },
+                {
                     "role": "user",
                     "content": prompt
                 }
