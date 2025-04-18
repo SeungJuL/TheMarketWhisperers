@@ -172,7 +172,7 @@ const DashboardPage = () => {
         setError("No valid stock symbol found in AI response.");
       }
 
-      // Step 2: Generate detailed AI insights
+      // Step 2: Generate detailed AI Response
       const insightsResponse = await fetch("http://localhost:8080/ai/", {
         method: "POST",
         headers: {
@@ -257,6 +257,16 @@ const DashboardPage = () => {
       );
       const histJson = await histRes.json();
 
+      // Fetch AI Insight
+      const insightRes = await fetch(`http://localhost:8080/ai/insight/${symbol}`);
+      const insightJson = await insightRes.json();
+      const insight = JSON.stringify(insightJson.data);
+      const parsedAIInsight = JSON.parse(insight);
+
+      // Fetch Company Background
+      const backgroundRes = await fetch(`http://localhost:8080/stock/${symbol}/background`);
+      const bckgrdJson = await backgroundRes.json();
+
       // Build chart arrays
       const rawDates = histJson.data.map((item) => item.Date);
       const chartLabels = [];
@@ -295,6 +305,14 @@ const DashboardPage = () => {
         chartClose,
         chartHighs,
         chartLows,
+        aiInsight: parsedAIInsight,
+        industry: bckgrdJson.data["basic_info"]["industry"],
+        sector: bckgrdJson.data["basic_info"]["sector"],
+        website: bckgrdJson.data["basic_info"]["website"],
+        ceo: bckgrdJson.data["company_stats"]["ceo"],
+        employees: bckgrdJson.data["company_stats"]["employees"],
+        city: bckgrdJson.data["location"]["city"],
+        state: bckgrdJson.data["location"]["state"],
         metrics: {
           weekHighLow:
             parseFloat(infoJson.data["52_week_high"]).toFixed(2) +
@@ -656,9 +674,7 @@ const DashboardPage = () => {
               <div className="flex space-x-2 border-b border-slate-600 pb-2 mb-4 justify-center">
                 {[
                   "AI Insights",
-                  "Company Background",
-                  "Fundamentals",
-                  "Technicals",
+                  "Company Background"
                 ].map((tab) => (
                   <button
                     key={tab}
@@ -675,12 +691,13 @@ const DashboardPage = () => {
               </div>
               <div className="text-gray-300">
                 {/* Tab content is blank now */}
-                {activeTab === "AI Insights" && <p>(No AI response here)</p>}
+                {/* {activeTab === "AI Insights" && <p>(No AI response here)</p>} */}
+                {activeTab === "AI Insights" && <p>{stockData.aiInsight}</p>}
                 {activeTab === "Company Background" && (
-                  <p>(Blank tab content)</p>
+                  <p>{stockData.name} operates in the {stockData.industry} industry within the {stockData.sector} sector. Headquartered in {stockData.city}, {stockData.state},
+                  the company is led by CEO {stockData.ceo} and employs approximately {Number(stockData.employees).toLocaleString()} people. To learn more about its business, visit 
+                  <a style={{color: 'blue'}} href={stockData.website}> {stockData.website}</a>.</p>
                 )}
-                {activeTab === "Fundamentals" && <p>(Blank tab content)</p>}
-                {activeTab === "Technicals" && <p>(Blank tab content)</p>}
               </div>
             </div>
           )}
