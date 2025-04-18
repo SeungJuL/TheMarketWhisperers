@@ -55,3 +55,4 @@ class StockController:
         except Exception as e:
             return ResponseUtil.error('An error occurred during getting stock informations', str(e)), 500
         
+        

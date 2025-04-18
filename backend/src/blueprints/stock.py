@@ -23,3 +23,7 @@ def stock_history(symbol):
 @stock_blueprint.route('/<symbol>/info', methods = ['GET'])
 def stock_metrics(symbol):
     return stock_controller.company_info(symbol)
+
+@stock_blueprint.route('/<symbol>/insight', methods = ['GET'])
+def stock_insight(symbol):
+    return stock_controller.get_stock_insight(symbol)
