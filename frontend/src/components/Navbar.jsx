@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 const Navbar = ({ user, setUser }) => {
   const handleLogout = async () => {
     try {
-      const response = await fetch("/user/logout", { // Use relative path
+      const response = await fetch("http://localhost:8080/user/logout", { // Use relative path
         method: "POST",
         credentials: "include", // Ensure cookies are sent with the request
       });
@@ -117,7 +117,7 @@ const Navbar = ({ user, setUser }) => {
               </span>
               <button
                 onClick={handleLogout}
-                className="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
               >
                 Logout
               </button>
@@ -126,13 +126,13 @@ const Navbar = ({ user, setUser }) => {
             <>
               <Link
                 to="/login"
-                className="text-slate-300 hover:text-white hover:bg-slate-700 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm text-center font-medium transition-colors min-w-20"
               >
                 Login
               </Link>
               <Link
                 to="/signup"
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm text-center font-medium transition-colors min-w-20"
               >
                 Sign Up
               </Link>

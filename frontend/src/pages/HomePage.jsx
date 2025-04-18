@@ -58,7 +58,7 @@ const HomePage = ({ user }) => {
 
                 <Link
                   to="/about"
-                  className="bg-slate-600 hover:bg-slate-800 text-white px-6 py-2 rounded-md font-semibold text-base transition-colors flex items-center justify-center gap-1"
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md font-semibold text-base transition-colors flex items-center justify-center gap-1"
                 >
                   About Us
                 </Link>

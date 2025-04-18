@@ -31,7 +31,7 @@ const ProfilePage = ({ user }) => {
     setMessage("");
     setError("");
     try {
-      const response = await fetch("/watchlist", {
+      const response = await fetch("http://localhost:8080/watchlist", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -58,7 +58,7 @@ const ProfilePage = ({ user }) => {
     setMessage("");
     setError("");
     try {
-      const response = await fetch("/watchlist", {
+      const response = await fetch("http://localhost:8080/watchlist", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -87,7 +87,7 @@ const ProfilePage = ({ user }) => {
     setMessage("");
     setError("");
     try {
-      const response = await fetch("/watchlist", {
+      const response = await fetch("http://localhost:8080/watchlist", {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
@@ -128,7 +128,7 @@ const ProfilePage = ({ user }) => {
     setError("");
 
     try {
-      const response = await fetch("/user/profile", {
+      const response = await fetch("http://localhost:8080/user/profile", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

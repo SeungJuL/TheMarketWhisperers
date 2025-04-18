@@ -13,7 +13,7 @@ function App() {
   const [loading, setLoading] = useState(true); // Add loading state
 
   useEffect(() => {
-    fetch("/user/profile", { // Use relative path
+    fetch("http://localhost:8080/user/profile", { // Use relative path
       credentials: "include", // Ensure cookies are sent with the request
       headers: {
         "Content-Type": "application/json", // Explicitly set content type

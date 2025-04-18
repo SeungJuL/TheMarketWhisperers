@@ -35,7 +35,7 @@ const SignupPage = ({ setUser }) => {
     if (!validatePassword()) return;
 
     try {
-      const response = await fetch("/user/register", { // Correct relative path
+      const response = await fetch("http://localhost:8080/user/register", { // Correct relative path
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password, username }),
@@ -45,7 +45,7 @@ const SignupPage = ({ setUser }) => {
       const data = await response.json();
       if (response.ok && data.success) {
         // Log in the user after successful registration
-        const loginResponse = await fetch("/user/login", {
+        const loginResponse = await fetch("http://localhost:8080/user/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email, password }),
