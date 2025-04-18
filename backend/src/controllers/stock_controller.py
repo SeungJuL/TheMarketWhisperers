@@ -55,4 +55,55 @@ class StockController:
         except Exception as e:
             return ResponseUtil.error('An error occurred during getting stock informations', str(e)), 500
         
+    def company_background(self, symbol):
+        try:
+            stock = self.stock_service.fetch_stock_data(symbol)
+            info = stock.info
+            
+            data = {
+                "basic_info": {
+                    "symbol": symbol,
+                    "name": info.get("longName"),
+                    "sector": info.get("sector"),
+                    "industry": info.get("industry"),
+                    "website": info.get("website")
+                },
+                "location": {
+                    "country": info.get("country"),
+                    "city": info.get("city"),
+                    "state": info.get("state"),
+                    "address": info.get("address1"),
+                    "zip": info.get("zip")
+                },
+                "contact": {
+                    "phone": info.get("phone")
+                },
+                "company_stats": {
+                    "employees": info.get("fullTimeEmployees"),
+                    "founded_year": info.get("foundedYear"),
+                    "ceo": info.get("companyOfficers", [{}])[0].get("name") if info.get("companyOfficers") else None,
+                    "board_members": len(info.get("companyOfficers", [])) if info.get("companyOfficers") else 0
+                },
+                "financials": {
+                    "assets": {
+                        "total_assets": info.get("totalAssets"),
+                        "total_cash": info.get("totalCash")
+                    },
+                    "liabilities": {
+                        "total_debt": info.get("totalDebt")
+                    },
+                    "performance": {
+                        "revenue": info.get("totalRevenue"),
+                        "gross_profit": info.get("grossProfits"),
+                        "operating_cash_flow": info.get("operatingCashflow"),
+                        "free_cash_flow": info.get("freeCashflow")
+                    }
+                }
+            }
+            
+            return ResponseUtil.success("Success getting company background information", data), 201
+            
+        except Exception as e:
+            return ResponseUtil.error('An error occurred during getting company background information', str(e)), 500
+        
         
