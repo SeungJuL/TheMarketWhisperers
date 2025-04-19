@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import PageWrapper from "../components/PageWrapper";
 import StockChart from "../components/StockChart";
-import { Switch, FormControlLabel } from "@mui/material";
+import { Switch, FormControlLabel, CircularProgress } from "@mui/material";
 
 const DashboardPage = () => {
   // ========== 1) UI State ==========
@@ -230,6 +230,7 @@ const DashboardPage = () => {
   const getStockData = async (stockName) => {
     setMessage("");
     setError("");
+    setIsLoading(true);
     try {
       const searchRes = await fetch(
         "http://localhost:8080/stock/search?stock_name=" + stockName
@@ -237,6 +238,7 @@ const DashboardPage = () => {
       const stocks = await searchRes.json();
       if (!stocks.success || !stocks.data || !stocks.data[0]) {
         setError(`Fetch stock failed! ${stocks.message || ""}`);
+        setIsLoading(false);
         return null;
       }
 
@@ -331,10 +333,12 @@ const DashboardPage = () => {
         },
       };
 
+      setIsLoading(false);
       return finalData;
-    } catch (err) {
-      console.error(err);
-      setError("Failed to connect to server");
+    } catch (error) {
+      console.error("Stock Data Fetch Error:", error);
+      setError("Failed to fetch stock data. Please try again.");
+      setIsLoading(false);
       return null;
     }
   };
@@ -376,25 +380,34 @@ const DashboardPage = () => {
       <PageWrapper>
         <div className="h-screen flex flex-col items-center justify-center">
           <h1 className="text-white text-2xl mb-4">Search for a Stock</h1>
-          <input
-            type="text"
-            textAlign="center"
-            style={{ width: "300px", height: "50px", fontSize: "18px" }}
-            className="w-full bg-slate-950 text-white px-4 py-2 border border-slate-600
-                       focus:outline-none focus:ring-2 focus:ring-blue-500 
-                       rounded text-sm"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyUp={async (evt) => {
-              if (evt.key === "Enter") {
-                const data = await getStockData(searchQuery);
-                if (data) {
-                  setStockData(data);
-                  setSearchQuery("");
+          <div className="relative">
+            <input
+              type="text"
+              textAlign="center"
+              style={{ width: "300px", height: "50px", fontSize: "18px" }}
+              className="w-full bg-slate-950 text-white px-4 py-2 border border-slate-600
+                         focus:outline-none focus:ring-2 focus:ring-blue-500 
+                         rounded text-sm"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyUp={async (evt) => {
+                if (evt.key === "Enter") {
+                  setIsLoading(true);
+                  const data = await getStockData(searchQuery);
+                  if (data) {
+                    setStockData(data);
+                    setSearchQuery("");
+                  }
+                  setIsLoading(false);
                 }
-              }
-            }}
-          />
+              }}
+            />
+            {isLoading && (
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                <CircularProgress size={24} style={{ color: '#3B82F6' }} />
+              </div>
+            )}
+          </div>
           {error && <p className="mt-2 text-red-500 text-sm">{error}</p>}
           {message && <p className="mt-2 text-green-500 text-sm">{message}</p>}
         </div>
@@ -420,25 +433,39 @@ const DashboardPage = () => {
         >
           {/* Smaller stock search (top) */}
           <div className="bg-slate-950 rounded-xl p-4 mb-4 shadow-md">
-            <input
-              type="text"
-              placeholder="Search for a stock"
-              className="w-full bg-slate-900 text-white px-4 py-2 border 
-                         border-slate-600 focus:outline-none 
-                         focus:ring-2 focus:ring-blue-500 
-                         rounded text-sm"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyUp={async (evt) => {
-                if (evt.key === "Enter") {
-                  const data = await getStockData(searchQuery);
-                  if (data) {
-                    setStockData(data);
-                    setSearchQuery("");
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search for a stock"
+                className="w-full bg-slate-900 text-white px-4 py-2 border 
+                           border-slate-600 focus:outline-none 
+                           focus:ring-2 focus:ring-blue-500 
+                           rounded text-sm"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={async (evt) => {
+                  if (evt.key === "Enter") {
+                    setIsLoading(true);
+                    try {
+                      const data = await getStockData(searchQuery);
+                      if (data) {
+                        setStockData(data);
+                        setSearchQuery("");
+                      }
+                    } catch (error) {
+                      setError("Failed to fetch stock data");
+                    } finally {
+                      setIsLoading(false);
+                    }
                   }
-                }
-              }}
-            />
+                }}
+              />
+              {isLoading && (
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                  <CircularProgress size={20} style={{ color: '#3B82F6' }} />
+                </div>
+              )}
+            </div>
             {error && <p className="mt-2 text-red-500 text-sm">{error}</p>}
             {message && (
               <p className="mt-2 text-green-500 text-sm">{message}</p>
