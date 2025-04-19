@@ -19,7 +19,12 @@ const ProfilePage = ({ user }) => {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [watchlist, setWatchlist] = useState([]);
-  const [newItem, setNewItem] = useState({ asset_symbol: "", name: "" });
+  const [newItem, setNewItem] = useState({ asset_symbol: "" });
+  const [passwordData, setPasswordData] = useState({
+    current_password: "",
+    new_password: "",
+    confirm_password: ""
+  });
 
   useEffect(() => {
     if (activeTab === 'watchlist') {
@@ -58,6 +63,21 @@ const ProfilePage = ({ user }) => {
     setMessage("");
     setError("");
     try {
+      // First fetch the stock name using the search endpoint
+      const searchRes = await fetch(
+        "http://localhost:8080/stock/search?stock_name=" + newItem.asset_symbol
+      );
+      const stocks = await searchRes.json();
+      
+      if (!stocks.success || !stocks.data || !stocks.data[0]) {
+        setError("Invalid stock symbol. Please try again.");
+        return;
+      }
+
+      const stockName = stocks.data[0]["2. name"];
+      const stockSymbol = stocks.data[0]["1. symbol"];
+
+      // Then add to watchlist with both symbol and name
       const response = await fetch("http://localhost:8080/watchlist", {
         method: "POST",
         headers: {
@@ -65,14 +85,14 @@ const ProfilePage = ({ user }) => {
         },
         credentials: "include",
         body: JSON.stringify({
-          asset_symbol: newItem.asset_symbol,
-          name: newItem.name,
+          asset_symbol: stockSymbol,
+          name: stockName
         }),
       });
       const data = await response.json();
       if (data.success) {
         setMessage("Item added to watchlist successfully!");
-        setNewItem({ asset_symbol: "", name: "" });
+        setNewItem({ asset_symbol: "" });
         fetchWatchlistData();
       } else {
         setError(data.message || "Failed to add item to watchlist");
@@ -147,6 +167,61 @@ const ProfilePage = ({ user }) => {
       }
     } catch (error) {
       console.error("Update Error:", error);
+      setError("Failed to connect to the server");
+    }
+  };
+
+  const handlePasswordChange = (e) => {
+    const { name, value } = e.target;
+    setPasswordData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleChangePassword = async () => {
+    setMessage("");
+    setError("");
+
+    // Validate passwords match
+    if (passwordData.new_password !== passwordData.confirm_password) {
+      setError("New passwords do not match");
+      return;
+    }
+
+    // Validate password length
+    if (passwordData.new_password.length < 8) {
+      setError("New password must be at least 8 characters long");
+      return;
+    }
+
+    try {
+      const response = await fetch("http://localhost:8080/user/password", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          current_password: passwordData.current_password,
+          new_password: passwordData.new_password
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setMessage("Password updated successfully!");
+        setPasswordData({
+          current_password: "",
+          new_password: "",
+          confirm_password: ""
+        });
+      } else {
+        setError(data.message || "Failed to update password");
+      }
+    } catch (error) {
+      console.error("Password Update Error:", error);
       setError("Failed to connect to the server");
     }
   };
@@ -365,15 +440,8 @@ const ProfilePage = ({ user }) => {
                       type="text"
                       placeholder="Asset Symbol"
                       value={newItem.asset_symbol}
-                      onChange={(e) => setNewItem({ ...newItem, asset_symbol: e.target.value })}
-                      className="w-1/3 p-2 text-black bg-white rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Name"
-                      value={newItem.name}
-                      onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
-                      className="w-1/3 p-2 text-black bg-white rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                      onChange={(e) => setNewItem({ asset_symbol: e.target.value })}
+                      className="w-1/2 p-2 text-black bg-white rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
                     />
                     <button
                       onClick={handleAddToWatchlist}
@@ -388,38 +456,86 @@ const ProfilePage = ({ user }) => {
 
             {/* Settings Tab */}
             {activeTab === 'settings' && (
-              <div className="h-full">
-                <h2 className="text-xl font-semibold mb-4">Preferences</h2>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between p-4 bg-slate-600 rounded-lg">
-                    <div>
-                      <h3 className="font-medium">Email Notifications</h3>
-                      <p className="text-sm text-slate-300">Receive updates via email</p>
+              <div className="h-full space-y-8">
+                <div>
+                  <h2 className="text-xl font-semibold mb-4">Preferences</h2>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between p-4 bg-slate-600 rounded-lg">
+                      <div>
+                        <h3 className="font-medium">Email Notifications</h3>
+                        <p className="text-sm text-slate-300">Receive updates via email</p>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={preferences.notification_email}
+                          onChange={() => handlePreferenceChange('notification_email')}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                      </label>
                     </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={preferences.notification_email}
-                        onChange={() => handlePreferenceChange('notification_email')}
-                        className="sr-only peer"
-                      />
-                      <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
+                    <div className="flex items-center justify-between p-4 bg-slate-600 rounded-lg">
+                      <div>
+                        <h3 className="font-medium">Mobile Notifications</h3>
+                        <p className="text-sm text-slate-300">Receive push notifications</p>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={preferences.notification_mobile}
+                          onChange={() => handlePreferenceChange('notification_mobile')}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                      </label>
+                    </div>
                   </div>
-                  <div className="flex items-center justify-between p-4 bg-slate-600 rounded-lg">
+                </div>
+
+                {/* Change Password Section */}
+                <div>
+                  <h2 className="text-xl font-semibold mb-4">Change Password</h2>
+                  <div className="space-y-4 bg-slate-600 rounded-lg p-6">
                     <div>
-                      <h3 className="font-medium">Mobile Notifications</h3>
-                      <p className="text-sm text-slate-300">Receive push notifications</p>
-                    </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
+                      <label className="block text-sm mb-2">Current Password</label>
                       <input
-                        type="checkbox"
-                        checked={preferences.notification_mobile}
-                        onChange={() => handlePreferenceChange('notification_mobile')}
-                        className="sr-only peer"
+                        type="password"
+                        name="current_password"
+                        value={passwordData.current_password}
+                        onChange={handlePasswordChange}
+                        className="w-full p-2 text-black bg-white rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        placeholder="Enter current password"
                       />
-                      <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
+                    </div>
+                    <div>
+                      <label className="block text-sm mb-2">New Password</label>
+                      <input
+                        type="password"
+                        name="new_password"
+                        value={passwordData.new_password}
+                        onChange={handlePasswordChange}
+                        className="w-full p-2 text-black bg-white rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        placeholder="Enter new password"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm mb-2">Confirm New Password</label>
+                      <input
+                        type="password"
+                        name="confirm_password"
+                        value={passwordData.confirm_password}
+                        onChange={handlePasswordChange}
+                        className="w-full p-2 text-black bg-white rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        placeholder="Confirm new password"
+                      />
+                    </div>
+                    <button
+                      onClick={handleChangePassword}
+                      className="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md text-sm font-medium"
+                    >
+                      Update Password
+                    </button>
                   </div>
                 </div>
               </div>
