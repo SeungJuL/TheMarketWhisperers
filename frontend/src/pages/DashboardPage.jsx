@@ -149,6 +149,7 @@ const DashboardPage = () => {
         },
         body: JSON.stringify({
           user_message: `Extract the most relevant stock ticker symbol for the company mentioned in this query: "${userInput}". Respond only with "Ticker: [SYMBOL]" where [SYMBOL] is the stock ticker.`,
+          current_stock: stockData?.symbol || null, // Include current stock symbol if available
         }),
       });
 
@@ -168,6 +169,10 @@ const DashboardPage = () => {
         } else {
           setError(`Invalid or delisted stock symbol: ${extractedSymbol}`);
         }
+      } else if (stockData?.symbol) {
+        // Use the current stock symbol if no valid symbol is found in the AI response
+        const stockInfo = await getStockData(stockData.symbol);
+        setStockData(stockInfo);
       } else {
         setError("No valid stock symbol found in AI response.");
       }
@@ -179,7 +184,7 @@ const DashboardPage = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          user_message: `Provide a detailed response to this query: "${userInput}".`,
+          user_message: `Provide a detailed response to this query: "${userInput}" for the stock "${stockData?.symbol || 'N/A'}".`,
         }),
       });
 
