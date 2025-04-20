@@ -5,41 +5,40 @@ import StockChart from "../components/StockChart";
 import { Switch, FormControlLabel, CircularProgress } from "@mui/material";
 
 const DashboardPage = () => {
-  // ========== 1) UI State ==========
+  // Page states and data
   const location = useLocation();
   const [activeTab, setActiveTab] = useState("AI Insights");
-
-  // Left-column stock search
   const [searchQuery, setSearchQuery] = useState("");
-  // AI chat input
   const [aiSearchQuery, setAiSearchQuery] = useState("");
-  // The main loaded stock data
   const [stockData, setStockData] = useState(null);
-  // Watchlist / toggles
+  
+  // UI states
   const [isVisible, setIsVisible] = useState(false);
   const [isInWatchlist, setIsInWatchlist] = useState(false);
   const [showMetrics, setShowMetrics] = useState(true);
   const [showChart, setShowChart] = useState(true);
   const [showTabs, setShowTabs] = useState(true);
-
-  // Error, message, AI response, loading
+  
+  // Loading and error states
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [aiResponse, setAiResponse] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [isMainSearchLoading, setIsMainSearchLoading] = useState(false);
+  const [isSmallSearchLoading, setIsSmallSearchLoading] = useState(false);
+  const [isAiLoading, setIsAiLoading] = useState(false);
 
-  // ========== 2) Draggable left column (Chat) state ==========
+  // Left sidebar width for draggable feature
   const [leftWidth, setLeftWidth] = useState(30);
   const dividerRef = useRef(null);
 
+  // Update watchlist status when stock changes
   useEffect(() => {
-    // If we already have a symbol, check if it's in watchlist
     if (stockData?.symbol) {
       fetchWatchlistStatus(stockData.symbol);
     }
   }, [stockData]);
 
-  // If the URL has ?stock=SYMBOL, we auto-fetch on mount
+  // Load stock data from URL params on mount
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const stock = params.get("stock");
@@ -54,6 +53,7 @@ const DashboardPage = () => {
     }
   }, [location]);
 
+  // Mouse handlers for draggable sidebar
   const handleMouseDown = (e) => {
     e.preventDefault();
     document.addEventListener("mousemove", handleMouseMove);
@@ -72,170 +72,48 @@ const DashboardPage = () => {
     document.removeEventListener("mouseup", handleMouseUp);
   };
 
-  // ========== Watchlist Logic ==========
-  const fetchWatchlistStatus = async (stockSymbol) => {
-    try {
-      const response = await fetch("http://localhost:8080/watchlist", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch watchlist");
-      }
-
-      const data = await response.json();
-      if (data.success) {
-        const isStockInWatchlist = data.data.some(
-          (item) => item.asset_symbol === stockSymbol
-        );
-        setIsInWatchlist(isStockInWatchlist);
-      } else {
-        throw new Error(data.message || "Failed to fetch watchlist");
-      }
-    } catch (error) {
-      console.error("Fetch Watchlist Error:", error);
-      setError("Failed to fetch watchlist");
-    }
-  };
-
-  const toggleWatchlist = async () => {
-    if (!stockData?.symbol) {
-      setError("No stock selected to add to watchlist");
-      return;
-    }
-
+  // Stock search handlers
+  const getMainStockData = async (stockName) => {
+    setMessage("");
     setError("");
+    setIsMainSearchLoading(true);
     try {
-      const method = isInWatchlist ? "DELETE" : "POST";
-      const body = isInWatchlist
-        ? { asset_symbol: stockData.symbol }
-        : { asset_symbol: stockData.symbol, name: stockData.name };
-
-      const response = await fetch("http://localhost:8080/watchlist", {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify(body),
-      });
-
-      const data = await response.json();
-      if (data.success) {
-        setIsInWatchlist(!isInWatchlist);
-      } else {
-        setError(data.message || "Failed to update watchlist");
+      const data = await getStockData(stockName);
+      if (data) {
+        setStockData(data);
+        setSearchQuery("");
       }
     } catch (error) {
-      console.error("Toggle Watchlist Error:", error);
-      setError("Failed to connect to the server");
-    }
-  };
-
-  // ========== AI Chat Logic ==========
-  const handleAiSearch = async (userInput) => {
-    setIsLoading(true);
-    setError("");
-    try {
-      // Step 1: Extract Ticker
-      const tickerResponse = await fetch("http://localhost:8080/ai/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          user_message: `Extract the most relevant stock ticker symbol for the company mentioned in this query: "${userInput}". Respond only with "Ticker: [SYMBOL]" where [SYMBOL] is the stock ticker.`,
-          current_stock: stockData?.symbol || null, // Include current stock symbol if available
-        }),
-      });
-
-      if (!tickerResponse.ok) {
-        throw new Error("Failed to fetch AI ticker response");
-      }
-
-      const tickerData = await tickerResponse.json();
-      const extractedSymbol = extractStockSymbol(tickerData.data);
-
-      if (extractedSymbol) {
-        const isValid = await validateStockSymbol(extractedSymbol);
-        if (isValid) {
-          setSearchQuery(extractedSymbol);
-          const stockInfo = await getStockData(extractedSymbol);
-          setStockData(stockInfo);
-        } else {
-          setError(`Invalid or delisted stock symbol: ${extractedSymbol}`);
-        }
-      } else if (stockData?.symbol) {
-        // Use the current stock symbol if no valid symbol is found in the AI response
-        const stockInfo = await getStockData(stockData.symbol);
-        setStockData(stockInfo);
-      } else {
-        setError("No valid stock symbol found in AI response.");
-      }
-
-      // Step 2: Generate detailed AI Response
-      const insightsResponse = await fetch("http://localhost:8080/ai/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          user_message: `Provide a detailed response to this query: "${userInput}" for the stock "${stockData?.symbol || 'N/A'}".`,
-        }),
-      });
-
-      if (!insightsResponse.ok) {
-        throw new Error("Failed to fetch AI insights response");
-      }
-
-      const insightsData = await insightsResponse.json();
-      // Place the AI response only in the chatbox
-      setAiResponse(insightsData.data);
-    } catch (error) {
-      console.error("AI Search Error:", error);
-      setError("Failed to connect to the AI service.");
+      setError("Failed to fetch stock data");
     } finally {
-      setAiSearchQuery("");
-      setIsLoading(false);
+      setIsMainSearchLoading(false);
     }
   };
 
-  const validateStockSymbol = async (symbol) => {
+  const getSmallStockData = async (stockName) => {
+    setMessage("");
+    setError("");
+    setIsSmallSearchLoading(true);
     try {
-      const response = await fetch(
-        `http://localhost:8080/stock/${symbol}/info`
-      );
-      return response.ok;
+      const data = await getStockData(stockName);
+      if (data) {
+        setStockData(data);
+        setSearchQuery("");
+      }
     } catch (error) {
-      console.error("Stock Symbol Validation Error:", error);
-      return false;
+      setError("Failed to fetch stock data");
+    } finally {
+      setIsSmallSearchLoading(false);
     }
   };
 
-  const extractStockSymbol = (aiText) => {
-    const match = aiText.match(/Ticker:\s*([A-Z]{1,5})/);
-    return match ? match[1] : null;
-  };
-
-  // ========== 3) Main getStockData ==========
-  const parseDate = (dateStr) => {
-    const cleanedDateStr = dateStr.replace(/^[A-Za-z]{3},\s/, "");
-    const dateObj = new Date(cleanedDateStr);
-    if (isNaN(dateObj.getTime())) {
-      console.error(`Invalid date: ${dateStr}`);
-      return null;
-    }
-    return dateObj;
-  };
-
+  // Core data fetching functions
   const getStockData = async (stockName) => {
     setMessage("");
     setError("");
-    setIsLoading(true);
+    if (!isAiLoading) {  // AI 채팅 중이 아닐 때만 isLoading 상태 변경
+      setIsMainSearchLoading(true);
+    }
     try {
       const searchRes = await fetch(
         "http://localhost:8080/stock/search?stock_name=" + stockName
@@ -243,7 +121,9 @@ const DashboardPage = () => {
       const stocks = await searchRes.json();
       if (!stocks.success || !stocks.data || !stocks.data[0]) {
         setError(`Fetch stock failed! ${stocks.message || ""}`);
-        setIsLoading(false);
+        if (!isAiLoading) {
+          setIsMainSearchLoading(false);
+        }
         return null;
       }
 
@@ -313,13 +193,33 @@ const DashboardPage = () => {
         chartHighs,
         chartLows,
         aiInsight: parsedAIInsight,
-        industry: bckgrdJson.data["basic_info"]["industry"],
-        sector: bckgrdJson.data["basic_info"]["sector"],
-        website: bckgrdJson.data["basic_info"]["website"],
-        ceo: bckgrdJson.data["company_stats"]["ceo"],
-        employees: bckgrdJson.data["company_stats"]["employees"],
-        city: bckgrdJson.data["location"]["city"],
-        state: bckgrdJson.data["location"]["state"],
+        // Company Background Data
+        industry: bckgrdJson.data.basic_info.industry,
+        sector: bckgrdJson.data.basic_info.sector,
+        website: bckgrdJson.data.basic_info.website,
+        name: bckgrdJson.data.basic_info.name,
+        // Location
+        country: bckgrdJson.data.location.country,
+        city: bckgrdJson.data.location.city,
+        state: bckgrdJson.data.location.state,
+        address: bckgrdJson.data.location.address,
+        zip: bckgrdJson.data.location.zip,
+        // Contact
+        phone: bckgrdJson.data.contact.phone,
+        // Company Stats
+        employees: bckgrdJson.data.company_stats.employees,
+        founded_year: bckgrdJson.data.company_stats.founded_year,
+        ceo: bckgrdJson.data.company_stats.ceo,
+        board_members: bckgrdJson.data.company_stats.board_members,
+        // Financials
+        total_assets: bckgrdJson.data.financials.assets.total_assets,
+        total_cash: bckgrdJson.data.financials.assets.total_cash,
+        total_debt: bckgrdJson.data.financials.liabilities.total_debt,
+        revenue: bckgrdJson.data.financials.performance.revenue,
+        gross_profit: bckgrdJson.data.financials.performance.gross_profit,
+        operating_cash_flow: bckgrdJson.data.financials.performance.operating_cash_flow,
+        free_cash_flow: bckgrdJson.data.financials.performance.free_cash_flow,
+        // Metrics
         metrics: {
           weekHighLow:
             parseFloat(infoJson.data["52_week_high"]).toFixed(2) +
@@ -338,14 +238,171 @@ const DashboardPage = () => {
         },
       };
 
-      setIsLoading(false);
+      if (!isAiLoading) {
+        setIsMainSearchLoading(false);
+      }
       return finalData;
     } catch (error) {
       console.error("Stock Data Fetch Error:", error);
       setError("Failed to fetch stock data. Please try again.");
-      setIsLoading(false);
+      if (!isAiLoading) {
+        setIsMainSearchLoading(false);
+      }
       return null;
     }
+  };
+
+  // Helper functions
+  const parseDate = (dateStr) => {
+    const cleanedDateStr = dateStr.replace(/^[A-Za-z]{3},\s/, "");
+    const dateObj = new Date(cleanedDateStr);
+    if (isNaN(dateObj.getTime())) {
+      console.error(`Invalid date: ${dateStr}`);
+      return null;
+    }
+    return dateObj;
+  };
+
+  // ========== Watchlist Logic ==========
+  const fetchWatchlistStatus = async (stockSymbol) => {
+    try {
+      const response = await fetch("http://localhost:8080/watchlist", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch watchlist");
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        const isStockInWatchlist = data.data.some(
+          (item) => item.asset_symbol === stockSymbol
+        );
+        setIsInWatchlist(isStockInWatchlist);
+      } else {
+        throw new Error(data.message || "Failed to fetch watchlist");
+      }
+    } catch (error) {
+      console.error("Fetch Watchlist Error:", error);
+      setError("Failed to fetch watchlist");
+    }
+  };
+
+  const toggleWatchlist = async () => {
+    if (!stockData?.symbol) {
+      setError("No stock selected to add to watchlist");
+      return;
+    }
+
+    setError("");
+    try {
+      const method = isInWatchlist ? "DELETE" : "POST";
+      const body = isInWatchlist
+        ? { asset_symbol: stockData.symbol }
+        : { asset_symbol: stockData.symbol, name: stockData.name };
+
+      const response = await fetch("http://localhost:8080/watchlist", {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(body),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setIsInWatchlist(!isInWatchlist);
+      } else {
+        setError(data.message || "Failed to update watchlist");
+      }
+    } catch (error) {
+      console.error("Toggle Watchlist Error:", error);
+      setError("Failed to connect to the server");
+    }
+  };
+
+  // ========== AI Chat Logic ==========
+  const handleAiSearch = async (userInput) => {
+    setIsAiLoading(true);
+    setError("");
+    try {
+      // Step 1: Extract Ticker
+      const tickerResponse = await fetch("http://localhost:8080/ai/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_message: `Extract the most relevant stock ticker symbol for the company mentioned in this query: "${userInput}". Respond only with "Ticker: [SYMBOL]" where [SYMBOL] is the stock ticker.`,
+          current_stock: stockData?.symbol || null,
+        }),
+      });
+
+      if (!tickerResponse.ok) {
+        throw new Error("Failed to fetch AI ticker response");
+      }
+
+      const tickerData = await tickerResponse.json();
+      const extractedSymbol = extractStockSymbol(tickerData.data);
+
+      if (extractedSymbol) {
+        const isValid = await validateStockSymbol(extractedSymbol);
+        if (isValid) {
+          setSearchQuery(extractedSymbol);
+          const stockInfo = await getStockData(extractedSymbol);
+          setStockData(stockInfo);
+        } else {
+          setError(`Invalid or delisted stock symbol: ${extractedSymbol}`);
+        }
+      }
+
+      // Step 2: Generate detailed AI Response
+      const insightsResponse = await fetch("http://localhost:8080/ai/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_message: `Provide a detailed response to this query: "${userInput}" for the stock "${stockData?.symbol || 'N/A'}".`,
+        }),
+      });
+
+      if (!insightsResponse.ok) {
+        throw new Error("Failed to fetch AI insights response");
+      }
+
+      const insightsData = await insightsResponse.json();
+      setAiResponse(insightsData.data);
+    } catch (error) {
+      console.error("AI Search Error:", error);
+      setError("Failed to connect to the AI service.");
+    } finally {
+      setAiSearchQuery("");
+      setIsAiLoading(false);
+    }
+  };
+
+  const validateStockSymbol = async (symbol) => {
+    try {
+      const response = await fetch(
+        `http://localhost:8080/stock/${symbol}/info`
+      );
+      return response.ok;
+    } catch (error) {
+      console.error("Stock Symbol Validation Error:", error);
+      return false;
+    }
+  };
+
+  const extractStockSymbol = (aiText) => {
+    const match = aiText.match(/Ticker:\s*([A-Z]{1,5})/);
+    return match ? match[1] : null;
   };
 
   // ========== 4) MetricCard ==========
@@ -397,17 +454,13 @@ const DashboardPage = () => {
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyUp={async (evt) => {
                 if (evt.key === "Enter") {
-                  setIsLoading(true);
-                  const data = await getStockData(searchQuery);
-                  if (data) {
-                    setStockData(data);
-                    setSearchQuery("");
-                  }
-                  setIsLoading(false);
+                  evt.preventDefault();
+                  evt.stopPropagation();
+                  await getMainStockData(searchQuery);
                 }
               }}
             />
-            {isLoading && (
+            {isMainSearchLoading && (
               <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
                 <CircularProgress size={24} style={{ color: '#3B82F6' }} />
               </div>
@@ -450,22 +503,13 @@ const DashboardPage = () => {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={async (evt) => {
                   if (evt.key === "Enter") {
-                    setIsLoading(true);
-                    try {
-                      const data = await getStockData(searchQuery);
-                      if (data) {
-                        setStockData(data);
-                        setSearchQuery("");
-                      }
-                    } catch (error) {
-                      setError("Failed to fetch stock data");
-                    } finally {
-                      setIsLoading(false);
-                    }
+                    evt.preventDefault();
+                    evt.stopPropagation();
+                    await getSmallStockData(searchQuery);
                   }
                 }}
               />
-              {isLoading && (
+              {isSmallSearchLoading && (
                 <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
                   <CircularProgress size={20} style={{ color: '#3B82F6' }} />
                 </div>
@@ -489,7 +533,7 @@ const DashboardPage = () => {
             >
               <p>
                 <strong className="text-gray-100">AI:</strong>{" "}
-                {isLoading
+                {isAiLoading
                   ? "Loading AI response..."
                   : aiResponse || "Ask a question to get AI insights."}
               </p>
@@ -505,7 +549,9 @@ const DashboardPage = () => {
                 value={aiSearchQuery}
                 onChange={(e) => setAiSearchQuery(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter" && !isLoading) {
+                  if (e.key === "Enter" && !isMainSearchLoading) {
+                    e.preventDefault();
+                    e.stopPropagation();
                     handleAiSearch(aiSearchQuery);
                   }
                 }}
@@ -516,11 +562,11 @@ const DashboardPage = () => {
                            rounded-lg hover:bg-blue-700 
                            focus:outline-none focus:ring-2 
                            focus:ring-blue-500 ${
-                             isLoading ? "opacity-50 cursor-not-allowed" : ""
+                             isAiLoading ? "opacity-50 cursor-not-allowed" : ""
                            }`}
-                disabled={isLoading}
+                disabled={isAiLoading}
               >
-                {isLoading ? "Loading..." : "Send"}
+                {isAiLoading ? "Loading..." : "Send"}
               </button>
             </div>
           </div>
@@ -722,13 +768,72 @@ const DashboardPage = () => {
                 ))}
               </div>
               <div className="text-gray-300">
-                {/* Tab content is blank now */}
-                {/* {activeTab === "AI Insights" && <p>(No AI response here)</p>} */}
-                {activeTab === "AI Insights" && <p>{stockData.aiInsight}</p>}
+                {activeTab === "AI Insights" && (
+                  <div className="space-y-4">
+                    {stockData.aiInsight.split('\n').map((paragraph, index) => (
+                      <p key={index} className="text-sm leading-relaxed">
+                        {paragraph}
+                      </p>
+                    ))}
+                  </div>
+                )}
                 {activeTab === "Company Background" && (
-                  <p>{stockData.name} operates in the {stockData.industry} industry within the {stockData.sector} sector. Headquartered in {stockData.city}, {stockData.state},
-                  the company is led by CEO {stockData.ceo} and employs approximately {Number(stockData.employees).toLocaleString()} people. To learn more about its business, visit 
-                  <a style={{color: 'blue'}} href={stockData.website}> {stockData.website}</a>.</p>
+                  <div className="space-y-6">
+                    {/* Basic Company Info */}
+                    <div>
+                      <h3 className="text-lg font-semibold text-blue-400 mb-2">Company Overview</h3>
+                      <p className="text-sm leading-relaxed">
+                        {stockData.name} operates in the {stockData.industry} industry within the {stockData.sector} sector. 
+                        Headquartered in {stockData.city}, {stockData.state}, the company is led by CEO {stockData.ceo} and 
+                        employs approximately {Number(stockData.employees).toLocaleString()} people.
+                      </p>
+                    </div>
+
+                    {/* Contact & Location */}
+                    <div>
+                      <h3 className="text-lg font-semibold text-blue-400 mb-2">Contact & Location</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <p>Website: <a href={stockData.website} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300">{stockData.website}</a></p>
+                          <p>Phone: {stockData.phone}</p>
+                        </div>
+                        <div>
+                          <p>Address: {stockData.address}</p>
+                          <p>{stockData.city}, {stockData.state} {stockData.zip}</p>
+                          <p>{stockData.country}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Financial Overview */}
+                    <div>
+                      <h3 className="text-lg font-semibold text-blue-400 mb-2">Financial Overview</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <p>Total Assets: {stockData.total_assets ? `$${Number(stockData.total_assets).toLocaleString()}` : 'N/A'}</p>
+                          <p>Total Cash: {stockData.total_cash ? `$${Number(stockData.total_cash).toLocaleString()}` : 'N/A'}</p>
+                          <p>Total Debt: {stockData.total_debt ? `$${Number(stockData.total_debt).toLocaleString()}` : 'N/A'}</p>
+                        </div>
+                        <div>
+                          <p>Revenue: {stockData.revenue ? `$${Number(stockData.revenue).toLocaleString()}` : 'N/A'}</p>
+                          <p>Gross Profit: {stockData.gross_profit ? `$${Number(stockData.gross_profit).toLocaleString()}` : 'N/A'}</p>
+                          <p>Operating Cash Flow: {stockData.operating_cash_flow ? `$${Number(stockData.operating_cash_flow).toLocaleString()}` : 'N/A'}</p>
+                          <p>Free Cash Flow: {stockData.free_cash_flow ? `$${Number(stockData.free_cash_flow).toLocaleString()}` : 'N/A'}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Leadership */}
+                    <div>
+                      <h3 className="text-lg font-semibold text-blue-400 mb-2">Leadership</h3>
+                      <div className="text-sm">
+                        <p>CEO: {stockData.ceo || 'N/A'}</p>
+                        <p>Board Members: {stockData.board_members || 'N/A'}</p>
+                        <p>Total Employees: {stockData.employees ? Number(stockData.employees).toLocaleString() : 'N/A'}</p>
+                        <p>Founded: {stockData.founded_year || 'N/A'}</p>
+                      </div>
+                    </div>
+                  </div>
                 )}
               </div>
             </div>
