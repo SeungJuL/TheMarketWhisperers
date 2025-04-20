@@ -8,16 +8,16 @@ from unittest.mock import patch, MagicMock
 def test_profile_success(mock_current_user, mock_user_model):
     # Setup
     mock_current_user.id = 1
-    mock_user_model.return_value.find_by_id.return_value = (1, 'test@example.com', 'hashed_password', 'username')
+    mock_user_model.return_value.find_by_id.return_value = (1, 'test@example.com', 'hashed_password', 'username', '2023-01-01', None, None, None)
     
     # Test
     controller = UserController()
-    response, status_code = controller.profile()
+    response, status_code = controller.get_profile()
     
     # Verify
-    assert status_code == 201
+    assert status_code == 200
     assert response['success'] == True
-    assert response['message'] == 'Sucess getting user profile'
+    assert response['message'] == 'Profile retrieved successfully'
     assert response['data']['email'] == 'test@example.com'
     assert response['data']['username'] == 'username'
 
@@ -30,10 +30,10 @@ def test_profile_user_not_found(mock_current_user, mock_user_model):
     
     # Test
     controller = UserController()
-    response, status_code = controller.profile()
+    response, status_code = controller.get_profile()
     
     # Verify
-    assert status_code == 400
+    assert status_code == 404
     assert response['success'] == False
     assert response['message'] == 'User not found'
 

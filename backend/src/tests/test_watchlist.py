@@ -133,18 +133,18 @@ def test_remove_from_watchlist_success(mock_current_user, mock_watchlist_model):
 def test_remove_from_watchlist_missing_data(mock_current_user, mock_watchlist_model):
     # Setup
     mock_current_user.id = 1
-    
+
     # Test
     controller = WatchlistController()
     data = {
         # asset_symbol is missing
     }
     response, status_code = controller.remove_from_watchlist(data)
-    
+
     # Verify
     assert status_code == 400
     assert response['success'] == False
-    assert response['message'] == 'Asset symbol are required'
+    assert response['message'] == 'Asset symbol is required'
     assert response['data'] == None
 
 @patch('controllers.watchlist_controller.WatchlistModel')
