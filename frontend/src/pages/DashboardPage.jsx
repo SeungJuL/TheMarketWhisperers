@@ -720,7 +720,9 @@ const DashboardPage = () => {
                 />
                 <MetricCard
                   label="Debt-to-Equity"
-                  value={parseFloat(stockData.metrics.debtToEquity).toFixed(2)}
+                  value={
+                    parseFloat(stockData.metrics.debtToEquity).toFixed(2) / 100
+                  }
                   tooltip="Liabilities / equity ratio"
                 />
                 <MetricCard
