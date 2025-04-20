@@ -59,6 +59,10 @@ TheMarketWhisperers/
 
 ## 🚀 Getting Started
 
+📺 **Setup Walkthrough Video**  
+Watch the full project setup on YouTube:  
+👉 [https://www.youtube.com/watch?v=Tm2unkstuXA](https://www.youtube.com/watch?v=Tm2unkstuXA)
+
 ### Prerequisites
 
 - Node.js (v16 or higher)
